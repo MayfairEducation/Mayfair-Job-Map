@@ -4,10 +4,7 @@
     <title>United States School District Map</title>
     <meta charset="utf-8" />
 
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
     <script>
@@ -20,7 +17,25 @@
     <style>
         body { margin: 0; font-family: Arial, sans-serif; }
         h1 { text-align: center; margin: 20px 0; }
-        #map { height: 85vh; width: 95%; margin: auto; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+
+        /* Legend Styling */
+        .legend {
+            background: white;
+            padding: 10px;
+            line-height: 18px;
+            color: #555;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+            border: 1px solid #999;
+        }
     </style>
 </head>
 <body>
@@ -31,13 +46,15 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-
+// Initialize Map
 var map = L.map('map').setView([39.5, -98.35], 4);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+// Define active states list
+var activeStates = ["Illinois", "Pennsylvania"];
 
 // Load US State Boundaries
 fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json")
@@ -45,8 +62,12 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
   .then(data => {
 
     function style(feature) {
+        var stateName = feature.properties.name;
+        // Green for active, Grey for inactive
+        var baseColor = activeStates.includes(stateName) ? "#28a745" : "#cccccc";
+
         return {
-            fillColor: "#cccccc",
+            fillColor: baseColor,
             weight: 1,
             opacity: 1,
             color: "white",
@@ -57,15 +78,19 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
     function highlight(e) {
         var layer = e.target;
         layer.setStyle({
-            fillColor: "#4da6ff"
+            fillColor: "#4da6ff", // Bright blue on hover
+            fillOpacity: 0.9
         });
+        
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
     }
 
     function resetHighlight(e) {
         geojson.resetStyle(e.target);
     }
 
-    // SPOT 2: UPDATED FUNCTION WITH TRACKING
     function zoomToFeature(e) {
         var stateName = e.target.feature.properties.name;
 
@@ -74,7 +99,9 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
             'state_name': stateName
         });
 
-        if (["Illinois","Wisconsin","Michigan","Indiana","Missouri","Pennsylvania"].includes(stateName)) {
+        // Only redirect if the state is in our supported list
+        var supportedStates = ["Illinois","Wisconsin","Michigan","Indiana","Missouri","Pennsylvania"];
+        if (supportedStates.includes(stateName)) {
             window.location.href = stateName.toLowerCase() + ".html";
         }
     }
@@ -85,7 +112,6 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
             mouseout: resetHighlight,
             click: zoomToFeature
         });
-
         layer.bindTooltip(feature.properties.name);
     }
 
@@ -94,9 +120,21 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
         onEachFeature: onEachFeature
     }).addTo(map);
 
+    // Add Legend to Map
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'legend');
+        div.innerHTML += '<strong>Map Status</strong><br>';
+        div.innerHTML += '<i style="background: #28a745"></i> Job Links Live<br>';
+        div.innerHTML += '<i style="background: #cccccc"></i> Coming Soon';
+        return div;
+    };
+
+    legend.addTo(map);
 });
 
 </script>
 
 </body>
-</html> 
+</html>
