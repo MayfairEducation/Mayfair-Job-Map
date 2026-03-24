@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>United States School District Map</title>
+    <meta charset="utf-8" />
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; }
+    </style>
+</head>
+<body>
+
+<h1>United States School District Map</h1>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+var map = L.map('map').setView([39.5, -98.35], 4);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+
+// Load US State Boundaries
+fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json")
+  .then(response => response.json())
+  .then(data => {
+
+    function style(feature) {
+        return {
+            fillColor: "#cccccc",
+            weight: 1,
+            opacity: 1,
+            color: "white",
+            fillOpacity: 0.7
+        };
+    }
+
+    function highlight(e) {
+        var layer = e.target;
+        layer.setStyle({
+            fillColor: "#4da6ff"
+        });
+    }
+
+    function resetHighlight(e) {
+        geojson.resetStyle(e.target);
+    }
+
+    // SPOT 2: UPDATED FUNCTION WITH TRACKING
+    function zoomToFeature(e) {
+        var stateName = e.target.feature.properties.name;
+
+        // Log the state click to Google
+        gtag('event', 'select_state', {
+            'state_name': stateName
+        });
+
+        if (["Illinois","Wisconsin","Michigan","Indiana","Missouri","Pennsylvania"].includes(stateName)) {
+            window.location.href = stateName.toLowerCase() + ".html";
+        }
+    }
+
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: highlight,
+            mouseout: resetHighlight,
+            click: zoomToFeature
+        });
+
+        layer.bindTooltip(feature.properties.name);
+    }
+
+    var geojson = L.geoJson(data, {
+        style: style,
+        onEachFeature: onEachFeature
+    }).addTo(map);
+
+});
+
+</script>
+
+</body>
+</html>

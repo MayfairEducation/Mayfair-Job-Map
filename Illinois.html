@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Illinois School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Illinois School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+// Illinois-wide view
+var map = L.map('map').setView([40.0, -89.0], 7);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Search Bar: Zooms to area WITHOUT dropping a marker
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    // --- LAKE COUNTY SCHOOLS ---
+    "Winthrop Harbor School District 1": "https://www.applitrack.com/whsd1/onlineapp/default.aspx?all=1",
+    "Beach Park Community Consolidated School District 3": "https://www.applitrack.com/bpd3/onlineapp/default.aspx?all=1",
+    "Zion Elementary School District 6": "https://www.generalasp.com/Zion6/onlineapp/default.aspx?all=1",
+    "Millburn Community Consolidated School District 24": "https://www.applitrack.com/millburn/onlineapp/default.aspx?all=1",
+    "Emmons School District 33": "https://www.applitrack.com/emmons/onlineapp/default.aspx?all=1",
+    "Antioch Community Consolidated School District 34": "https://www.applitrack.com/antioch34/onlineapp/default.aspx?all=1",
+    "Grass Lake School District 36": "https://jobs.redroverk12.com/org/GLSD36",
+    "Gavin School District 37": "https://www.applitrack.com/gs37/onlineapp/default.aspx?all=1",
+    "Big Hollow School District 38": "https://www.applitrack.com/lake/OnlineApp/JobPostings/view.asp?embed=1&choosedistrict=true&applitrackclient=1228&all=1=&all%3D1",
+    "Lake Villa Community Consolidated School District 41": "https://www.applitrack.com/district41/onlineapp/default.aspx?all=1",
+    "Community Consolidated School District 46": "https://www.applitrack.com/grayslake/onlineapp/default.aspx?all=1",
+    "Woodland Community Consolidated School District 50": "https://www.applitrack.com/dist50/onlineapp/default.aspx?all=1",
+    "Gurnee School District 56": "https://www.applitrack.com/d56/onlineapp/default.aspx?all=1",
+    "Waukegan Community Unit School District 60": "https://www.applitrack.com/waukeganschools/onlineapp/default.aspx?all=1",
+    "Lake Bluff Elementary School District 65": "https://www.generalasp.com/LBSD/onlineapp/default.aspx?all=1",
+    "Lake Forest School District 67": "https://www.applitrack.com/lfsd/onlineapp/default.aspx?all=1",
+    "Oak Grove School District 68": "https://www.applitrack.com/lake/onlineapp/jobpostings/view.asp?district=1229&all=1",
+    "Libertyville School District 70": "https://jobs.redroverk12.com/org/LibertyvilleD70",
+    "Rondout School District 72": "https://www.rondout.org/page/employment-opportunities",
+    "Hawthorn Community Consolidated School District 73": "https://www.applitrack.com/hsd73/onlineapp/default.aspx?all=1",
+    "Mundelein Elementary School District 75": "https://www.generalasp.com/d75/onlineapp/default.aspx?all=1",
+    "Diamond Lake School District 76": "https://www.applitrack.com/lake/onlineapp/jobpostings/view.asp?internaltransferform.Url=&choosedistrict=true&applitrackclient=1225&all=1",
+    "Fremont School District 79": "https://www.applitrack.com/fremont/onlineapp/default.aspx",
+    "Lake Zurich Community Unit School District 95": "https://www.generalasp.com/lz95/onlineapp/default.aspx?all=1",
+    "Kildeer Countryside Community Consolidated School District 96": "https://www.generalasp.com/d96/onlineapp/default.aspx?all=1",
+    "Aptakisic-Tripp Community Consolidated School District 102": "https://www.applitrack.com/aptakisic/onlineapp/default.aspx?all=1",
+    "Lincolnshire-Prairie View School District 103": "https://www.applitrack.com/district103/onlineapp/default.aspx?all=1",
+    "Bannockburn Elementary School District 106": "https://www.applitrack.com/lake/OnlineApp/JobPostings/view.asp?embed=1&choosedistrict=true&applitrackclient=1227",
+    "Deerfield School District 109": "https://jobs.redroverk12.com/org/DPS109Jobs",
+    "North Shore School District 112": "https://www.generalasp.com/nssd112/onlineapp/default.aspx?all=1",
+    "Township High School District 113": "https://www.applitrack.com/dist113/onlineapp/default.aspx?all=1",
+    "Fox Lake Grade School District 114": "https://www.applitrack.com/lake/onlineapp/jobpostings/view.asp?district=37808&all=1",
+    "Lake Forest Community High School District 115": "https://www.applitrack.com/lfsd/onlineapp/default.aspx?all=1",
+    "Round Lake Area Schools Community Unit School District 116": "https://jobs.redroverk12.com/org/rlas",
+    "Community High School District 117": "https://www.applitrack.com/d117/onlineapp/default.aspx?all=1",
+    "Wauconda Community Unit School District 118": "https://www.applitrack.com/lake/onlineapp/jobpostings/view.asp?internaltransferform.Url=&choosedistrict=true&applitrackclient=1223&all=1",
+    "Mundelein Consolidated High School District 120": "https://www.applitrack.com/mhs/onlineapp/default.aspx?all=1",
+    "Warren Township High School District 121": "https://www.applitrack.com/lake/onlineapp/jobpostings/view.asp?district=1418&all=1",
+    "Grant Community High School District 124": "https://www.generalasp.com/Grant124/onlineapp/default.aspx?all=1",
+    "Adlai E Stevenson High School District 125": "https://jobs.redroverk12.com/org/2408",
+    "Zion-Benton Township High School District 126": "https://www.applitrack.com/d126/onlineapp/default.aspx?all=1",
+    "Grayslake Community High School District 127": "https://www.applitrack.com/d127/onlineapp/default.aspx?all=1",
+    "Community High School District 128": "https://d128.schoolspring.com/",
+    "North Chicago School District 187": "https://www.applitrack.com/northchicago/onlineapp/default.aspx?all=1",
+    "Barrington Community Unit School District 220": "https://www.applitrack.com/cusd220/onlineapp/default.aspx?all=1",
+
+    // --- DUPAGE & EDGAR COUNTY SCHOOLS ---
+    "West Chicago School District 33": "https://www.applitrack.com/wego33/onlineapp/default.aspx?all=1",
+    "Winfield School District 34": "https://www.winfield34.org/district-info/employmentopp",
+    "Glen Ellyn School District 41": "https://www.d41.org/careers/employment?all=1",
+    "Lombard School District 44": "https://www.applitrack.com/GEC/onlineapp/jobpostings/view.asp?applitrackclient=338&choosedistrict=true&all=1",
+    "Villa Park School District 45": "https://d45.org/human-resources/employment-opportunities/?all=1",
+    "Salt Creek School District 48": "https://www.applitrack.com/saltcreek48/onlineapp/default.aspx?all=1",
+    "Butler School District 53": "https://www.applitrack.com/d53/onlineapp/default.aspx?all=1",
+    "Downers Grove Grade School District 58": "https://www.applitrack.com/dg58/onlineapp/default.aspx?all=1",
+    "Maercker School District 60": "https://www.applitrack.com/maercker/onlineapp/default.aspx?all=1",
+    "Darien School District 61": "https://www.applitrack.com/darien61/onlineapp/default.aspx?all=1",
+    "Gower School District 62": "https://www.generalasp.com/gower/onlineapp/default.aspx?all=1",
+    "Cass School District 63": "https://www.generalasp.com/cassd63/OnlineApp/default.aspx?all=1",
+    "Center Cass School District 66": "https://www.applitrack.com/ccsd66/onlineapp/default.aspx?all=1",
+    "Woodridge School District 68": "https://www.applitrack.com/wr68/onlineapp/default.aspx?all=1",
+    "Hinsdale Community Consolidated School District 181": "https://www.applitrack.com/d181/onlineapp/default.aspx?all=1",
+    "Community Unit School District 200": "https://www.applitrack.com/cusd200/OnlineApp/default.aspx?all=1",
+    "Naperville Community Unit School District 203": "https://www.applitrack.com/d203/onlineapp/default.aspx?all=1",
+    "Indian Prairie Community Unit School District 204": "https://www.applitrack.com/ip204/onlineapp/default.aspx?all=1",
+    "Elmhurst Community Unit School District 205": "https://www.applitrack.com/Elmhurst/onlineapp/default.aspx",
+    "Lisle Community Unit School District 202": "https://www.applitrack.com/lisle202/onlineapp/default.aspx?all=1",
+    "Fenton Community High School District 100": "https://www.applitrack.com/fenton100/onlineapp/default.aspx",
+    "Lake Park Community High School District 108": "https://jobs.redroverk12.com/org/lakeparkjobs",
+    "Community High School District 94": "https://www.applitrack.com/d94/onlineapp/default.aspx?all=1",
+    "Glenbard Township High School District 87": "https://www.applitrack.com/glenbard/onlineapp/jobpostings/view.asp?applitracksort=title&internaltransferform.Url=&all=1",
+    "DuPage High School District 88": "https://dupage88.schoolspring.com/",
+    "Hindsdale Township High School District 86": "https://www.applitrack.com/d86/onlineapp/default.aspx?all=1",
+    "Downers Grove Community High School District 99": "https://jobs.redroverk12.com/org/2810",
+    "Edgar County Community Unit School District 6": "https://www.chrisman.k12.il.us/page/employment-opportunities",
+    "Paris Community Unit School District 4": "https://crestwood.k12.il.us/en-US/human-resources-76920f62",
+
+    // --- RECENT ADDITIONS (QUINCY, CAIRO, ETC) ---
+    "Quincy School District 172": "https://jobs.redroverk12.com/org/3383",
+    "Liberty Community Unit School District 2": "https://www.libertyschool.net/employment",
+    "Central Community Unit School District 3": "https://cusd3.com/positions-available/",
+    "Community Unit School District 4": "https://www.cusd4.com/board_of_education/employment_opportunities",
+    "Southeastern Community Unit School District 337": "https://southeastern337.sharpschool.net/district/employment",
+    "Western Community Unit School District 12": "https://www.westerncusd12.org/district-information/employment-opportunities/",
+    "Cairo Unit School District 1": "https://www.applitrack.com/cairoschooldistrict1/onlineapp/default.aspx?all=1",
+    "Bond County Community Unit School District 2": "https://www.bccu2.org/page/employment",
+    "Belvidere Community Unit School District 100": "https://www.applitrack.com/district100/onlineapp/default.aspx",
+    "North Boone Community Unit School District 200": "https://www.applitrack.com/nbcusd/onlineapp/default.aspx?all=1",
+    "Ohio Community Consolidated School District 17": "http://ohiocommunityschooldistricts.com/high-school/board-links/district-employment",
+    "Malden Community Consolidated School District 84": "https://maldengradeschool.org/board-of-education/district-employment",
+    "Ladd Community Consolidated School District 94": "https://www.laddccsd94.com/documents/district/employment-opportunities/577327",
+    "Spring Valley Community Consolidated School District 99": "https://www.sv99.org/vnews/display.v/SEC/News%7CJFK%20Job%20Opportunities",
+    "Depue Unit School District 103": "https://www.depueschools.org/section-1-introduction/section-3-goals",
+    "La Moille Community Unit School District 303": "https://www.lamoilleschools.org/job-openings/",
+
+    // --- DEKALB COUNTY ---
+    "DeKalb Community Unit School District 428": "https://www.applitrack.com/dekalbdist428/onlineapp/",
+    "Genoa-Kingston CUSD 424": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=255",
+    "Sycamore Community Unit School District 427": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=261",
+    "Indian Creek CUSD 425": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=258",
+    "Hiawatha CUSD 426": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=256",
+    "Hinckley-Big Rock CUSD 429": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=257",
+    "Sandwich Community Unit School District 430": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=259",
+    "Somonauk Community Unit School District 432": "https://www.applitrack.com/dekalb/onlineapp/default.aspx?choosedistrict=true&applitrackclient=260",
+
+    // --- COOK COUNTY ---
+    "Burbank School District 111": "https://burbank.schoolspring.com/",
+    "Chicago Public School District 299": "https://cpsk12il.taleo.net/careersection/3/jobsearch.ftl?lang=en",
+    "Sunset Ridge School District 29": "https://jobs.redroverk12.com/org/1542",
+    "Northbrook School District 28": "https://jobs.redroverk12.com/org/1896",
+    "West Northfield School District 31": "https://jobs.redroverk12.com/org/District31",
+    "New Trier Township High School District 203": "https://jobs.redroverk12.com/org/newtrierjobs",
+    "Orland School District 135": "https://jobs.redroverk12.com/org/osd135",
+    "Evergreen Park Elementary School District 124": "https://phl.applitrack.com/d124/onlineapp/default.aspx?all=1",
+    "Schaumburg Community Consolidated School District 54": "https://sd54.schoolspring.com/",
+    "Consolidated High School District 230": "https://skyward.iscorp.com/ConsolidatedHSILSky/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Union Ridge School District 86": "https://urs86.schoolspring.com/",
+    "ACE Amandla Charter School": "https://www.aceamandla.org/apps/jobs/",
+    "Arlington Heights School District 25": "https://www.ahsd125.org/district-ff/employment-opportunities",
+    "Atwood Heights School District 125": "https://www.ahsd125.org/district-ff/employment-opportunities",
+    "A E R O Special Education Cooperative": "https://www.applitrack.com/aero/onlineapp/default.aspx?all=1",
+    "Argo Community High School District 217": "https://www.applitrack.com/argo217/onlineapp/default.aspx?all=1",
+    "Avoca School District 37": "https://www.applitrack.com/Avoca/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Berkeley School District 87": "https://www.applitrack.com/berkeley87/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Bloom Township High School District 206": "https://www.applitrack.com/bloom/onlineapp/default.aspx?all=1",
+    "Brookwood School District 167": "https://www.applitrack.com/brookwood167/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Country Club Hills School District 160": "https://www.applitrack.com/cch160/onlineapp/default.aspx?all=1",
+    "Palatine Community Consolidated School District 15": "https://www.applitrack.com/ccsd15/onlineapp/default.aspx?all=1",
+    "Community Consolidated School District 59": "https://www.applitrack.com/ccsd59/onlineapp/default.aspx?all=1",
+    "Cicero School District 99": "https://www.applitrack.com/cicd99/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Horizon Science Academy Belmont Charter School": "https://www.applitrack.com/conceptschoolschicago/onlineapp/default.aspx?Category=High+School+Teaching",
+    "Chicago Ridge School District 127-5": "https://www.applitrack.com/crsd1275/onlineapp/default.aspx?all=1",
+    "La Grange School District 102": "https://www.applitrack.com/d102/onlineapp/default.aspx?all=1",
+    "La Grange School District 105 South": "https://www.applitrack.com/d105/onlineapp/default.aspx?all=1",
+    "LaGrange Highlands School District 106": "https://www.applitrack.com/d106/onlineapp/default.aspx?all=1",
+    "Pleasantdale School District 107": "https://www.applitrack.com/d107/onlineapp/default.aspx?all=1",
+    "Ridgeland School District 122": "https://www.applitrack.com/d122/onlineapp/default.aspx?all=1",
+    "Forest Ridge School District 142": "https://www.applitrack.com/d142/onlineapp/default.aspx?all=1",
+    "Community Consolidated School District 168": "https://www.applitrack.com/d168/onlineapp/default.aspx?all=1",
+    "Chicago Heights School District 170": "https://www.applitrack.com/d170/onlineapp/default.aspx?all=1",
+    "Evanston Township High School District 202": "https://www.applitrack.com/D202/onlineapp/default.aspx?all=1",
+    "Wheeling Community Consolidated School District 21": "https://www.applitrack.com/d21/onlineapp/default.aspx?all=1",
+    "Township High School District 214": "https://www.applitrack.com/d214/onlineapp/default.aspx?all=1",
+    "Thornton Fractional Township High School District 215": "https://www.applitrack.com/d215/onlineapp/default.aspx",
+    "Community High School District 218": "https://www.applitrack.com/D218/onlineapp/jobpostings/view.asp?all=1",
+    "Niles Township High School District 219": "https://www.applitrack.com/d219/onlineapp/jobpostings/view.asp?all=1",
+    "Reavis Township High School District 220": "https://www.applitrack.com/d220/onlineapp/default.aspx?all=1",
+    "Bremen Community High School District 228": "https://www.applitrack.com/d228/OnlineApp/default.aspx?all=1",
+    "Oak Lawn Community High School District 229": "https://www.applitrack.com/d229/onlineapp/default.aspx?all=1",
+    "Northbrook/Glenview School District 30": "https://www.applitrack.com/d30/onlineapp/default.aspx?all=1",
+    "Glencoe School District 35": "https://www.applitrack.com/d35/onlineapp/default.aspx?all=1",
+    "Wilmette School District 39": "https://www.applitrack.com/D39/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Community Consolidated School District 62": "https://www.applitrack.com/d62/onlineapp/default.aspx?all=1",
+    "East Maine School District 63": "https://www.applitrack.com/D63/onlineapp/jobpostings/view.asp?all=1",
+    "Evanston Community Consolidated School District 65": "https://www.applitrack.com/d65/onlineapp/default.aspx?all=1",
+    "Skokie School District 68": "https://www.applitrack.com/d68/onlineapp/default.aspx?all=1",
+    "Skokie School District 69": "https://www.applitrack.com/d69/onlineapp/default.aspx?all=1",
+    "East Prairie School District 73": "https://www.applitrack.com/d73/onlineapp/jobpostings/view.asp",
+    "Lincolnwood School District 74": "https://www.applitrack.com/d74/onlineapp/default.aspx?all=1",
+    "Mannheim School District 83": "https://www.applitrack.com/d83/onlineapp/default.aspx?all=1",
+    "Franklin Park School District 84": "https://www.applitrack.com/d84/onlineapp/default.aspx?all=1",
+    "River Forest School District 90": "https://www.applitrack.com/d90/onlineapp/default.aspx?all=1",
+    "Brookfield-Lagrange Park School District 95": "https://www.applitrack.com/d95/onlineapp/default.aspx?all=1",
+    "Oak Park Elementary School District 97": "https://www.applitrack.com/d97/onlineapp/default.aspx?all=1",
+    "Berwyn North School District 98": "https://www.applitrack.com/d98/onlineapp/default.aspx?all=1",
+    "Elementary School District 159": "https://www.applitrack.com/dist159/onlineapp/default.aspx?all=1",
+    "Cook County School District 130": "https://www.applitrack.com/district130/onlineapp/default.aspx?all=1",
+    "Community Consolidated School District 146": "https://www.applitrack.com/district146/onlineapp/default.aspx?all=1",
+    "Dolton School District 148": "https://www.applitrack.com/district148/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Riverside School District 96": "https://www.applitrack.com/district96/onlineapp/default.aspx?all=1",
+    "Dolton School District 149": "https://www.applitrack.com/dolton/onlineapp/default.aspx?all=1",
+    "Elmwood Park Community Unit School District 401": "https://www.applitrack.com/epcusd401/onlineapp/jobpostings/view.asp?internaltransferform.Url=&all=1",
+    "Evergreen Park Community High School District 231": "https://www.applitrack.com/evergreenpark/onlineapp/default.aspx?all=1",
+    "Forest Park School District 91": "https://www.applitrack.com/forestpark/onlineapp/default.aspx?all=1",
+    "Golf Elementary School District 67": "https://www.applitrack.com/golf67/onlineapp/default.aspx?all=1",
+    "Harvey School District 152": "https://www.applitrack.com/harvey/onlineapp/default.aspx?all=1",
+    "Hillside School District 93": "https://www.applitrack.com/hillside/onlineapp/default.aspx?all=1",
+    "Homewood School District 153": "https://www.applitrack.com/hsd153/onlineapp/default.aspx?all=1",
+    "Hoover-Schrum Memorial School District 157": "https://www.applitrack.com/hsd157/onlineapp/default.aspx?all=1",
+    "Komarek School District 94": "https://www.applitrack.com/komarek94/onlineapp/default.aspx?all=1",
+    "Lansing School District 158": "https://www.applitrack.com/lansing/onlineapp/default.aspx?all=1",
+    "Leyden Area Spec Educ Coop": "https://www.applitrack.com/lasecfp/onlineapp/default.aspx?all=1",
+    "Lemont Township High School District 210": "https://www.applitrack.com/lemont/onlineapp/default.aspx?all=1",
+    "Lincoln Elementary School District 156": "https://www.applitrack.com/lincoln156/onlineapp/default.aspx?all=1",
+    "Lindop School District 92": "https://www.applitrack.com/lindop92/onlineapp/default.aspx?all=1",
+    "Maywood-Melrose Park-Broadview School District 89": "https://www.applitrack.com/maywood89/onlineapp/default.aspx?all=1",
+    "Niles Elementary School District 71": "https://www.applitrack.com/niles71/onlineapp/default.aspx?all=1",
+    "Norridge School District 80": "https://www.applitrack.com/norridge80/onlineapp/jobpostings/view.asp?internaltransferform.Url=",
+    "North Palos School District 117": "https://www.applitrack.com/npd117/onlineapp/default.aspx?all=1",
+    "Niles Twp District for Spec Educ": "https://www.applitrack.com/ntdse/onlineapp/default.aspx?Category=Student+Support+Services",
+    "Palos Community Consolidated School District 118": "https://www.applitrack.com/palos118/onlineapp/default.aspx?all=1",
+    "Palos Heights School District 128": "https://www.applitrack.com/palos128/onlineapp/default.aspx?all=1",
+    "Park Forest School District 163": "https://www.applitrack.com/parkforest/onlineapp/default.aspx?all=1",
+    "Morton Grove School District 70": "https://www.applitrack.com/parkview70/onlineapp/default.aspx?all=1",
+    "Pennoyer School District 79": "https://www.applitrack.com/pennoyer/onlineapp/default.aspx?all=1",
+    "Prairie-Hills Elementary School District 144": "https://www.applitrack.com/phsd144/onlineapp/default.aspx",
+    "Posen-Robbins Elementary School District 143-5": "https://www.applitrack.com/prsd1435/onlineapp/default.aspx?all=1",
+    "Proviso Township High School District 209": "https://www.applitrack.com/pths209/onlineapp/default.aspx?all=1",
+    "Riverside-Brookfield Township School District 208": "https://www.applitrack.com/rbhs/onlineapp/default.aspx?all=1",
+    "Rhodes School District 84-5": "https://www.applitrack.com/rhodes/onlineapp/default.aspx?all=1",
+    "Ridgewood Community High School District 234": "https://www.applitrack.com/ridgewood/onlineapp/default.aspx?all=1",
+    "Rosemont Elementary School District 78": "https://www.applitrack.com/rosemont/onlineapp/default.aspx?all=1",
+    "River Trails School District 26": "https://www.applitrack.com/rtsd26/onlineapp/default.aspx?all=1",
+    "Central Stickney School District 110": "https://www.applitrack.com/sahs/onlineapp/default.aspx?all=1",
+    "Berwyn South School District 100": "https://www.applitrack.com/schooldistrict100/onlineapp/default.aspx?all=1",
+    "West Harvey-Dixmoor Public School District 147": "https://www.applitrack.com/scook/onlineapp/default.aspx?choosedistrict=true&applitrackclient=37316&all=1",
+    "Alsip-Hazelgreen-Oaklawn School District 126": "https://www.applitrack.com/scook/onlineapp/default.aspx?choosedistrict=true&applitrackclient=826",
+    "South Holland School District 151": "https://www.applitrack.com/scook/onlineapp/jobpostings/view.asp?applitrackclient=37315&all=1",
+    "Lyons School District 103": "https://www.applitrack.com/scook/onlineapp/jobpostings/view.asp?choosedistrict=true&district=827&all=1",
+    "Arbor Park School District 145": "https://www.applitrack.com/scook/onlineapp/jobpostings/view.asp?district=37296&all=1",
+    "Kirby School District 140": "https://www.applitrack.com/scook/OnlineApp/JobPostings/view.asp?embed=1&applitrackclient=37228&all=1=&category%3DMiddle%2BSchool%2BTeaching",
+    "General George Patton School District 133": "https://www.applitrack.com/scook/OnlineApp/JobPostings/view.asp?embed=1&applitrackclient=37865&all=1=&all%3D1",
+    "River Grove School District 85-5": "https://www.applitrack.com/scook/OnlineApp/JobPostings/view.asp?embed=1&applitrackclient=37989&all=1",
+    "Indian Springs School District 109": "https://www.applitrack.com/scook/OnlineApp/JobPostings/view.asp?embed=1&applitrackclient=828&all=1=&all%3D1",
+    "Midlothian School District 143": "https://www.applitrack.com/scook/onlineapp/jobpostings/view.asp?internaltransferform.Url=&choosedistrict=true&applitrackclient=1485",
+    "Oak Lawn-Hometown School District 123": "https://www.applitrack.com/scook/onlineapp/jobpostings/view.asp?internaltransferform.Url=&choosedistrict=true&applitrackclient=918",
+    "Summit School District 104": "https://www.applitrack.com/sd104/onlineapp/default.aspx?all=1",
+    "Lemont-Bromberek Combined School District 113A": "https://www.applitrack.com/sd113a/onlineapp/default.aspx?all=1",
+    "Calumet Public School District 132": "https://www.applitrack.com/sd132/onlineapp/default.aspx?all=1",
+    "South Holland School District 150": "https://www.applitrack.com/sd150/onlineapp/default.aspx?all=1",
+    "Calumet City School District 155": "https://www.applitrack.com/sd155/onlineapp/default.aspx?all=1",
+    "Flossmoor School District 161": "https://www.applitrack.com/sd161/onlineapp/default.aspx?all=1",
+    "Matteson Elementary School District 162": "https://www.applitrack.com/sd162/onlineapp/default.aspx?all=1",
+    "Sunnybrook School District 171": "https://www.applitrack.com/sd171/onlineapp/default.aspx?all=1",
+    "Schiller Park School District 81": "https://www.applitrack.com/sd81/onlineapp/default.aspx?all=1",
+    "Bellwood School District 88": "https://www.applitrack.com/sd88/onlineapp/default.aspx?all=1",
+    "Westchester School District 92-5": "https://www.applitrack.com/sd925/onlineapp/default.aspx?all=1",
+    "Skokie School District 73-5": "https://www.applitrack.com/skokie735/onlineapp/default.aspx?all=1",
+    "Speed SEJA 802": "https://www.applitrack.com/speed/onlineapp/default.aspx?all=1",
+    "Sandridge School District 172": "https://www.applitrack.com/ssd172/onlineapp/default.aspx?all=1",
+    "Willow Springs School District 108": "https://www.applitrack.com/willowspringsschool/onlineapp/default.aspx?all=1",
+    "Winnetka School District 36": "https://www.applitrack.com/winnetka36/onlineapp/default.aspx?all=1",
+    "Worth School District 127": "https://www.applitrack.com/worth127il/onlineapp/jobpostings/view.asp?internaltransferform.Url=",
+    "Western Springs School District 101": "https://www.applitrack.com/ws101/onlineapp/default.aspx?all=1",
+    "Ford Heights School District 169": "https://www.fordheights169.org/job-vacancies/",
+    "Oak Park and River Forest School District 200": "https://www.generalasp.com/d200/onlineapp/default.aspx?all=1",
+    "J S Morton High School District 201": "https://www.generalasp.com/d201/onlineapp/default.aspx?all=1",
+    "Lyons Township High School District 204": "https://www.generalasp.com/d204/onlineapp/default.aspx?all=1",
+    "Maine Township High School District 207": "https://www.generalasp.com/D207/onlineapp/default.aspx?all=1",
+    "Township High School District 211": "https://www.generalasp.com/d211/onlineapp/default.aspx?all=1",
+    "Glenbrook High School District 225": "https://www.generalasp.com/d225/onlineapp/default.aspx?all=1",
+    "Prospect Heights School District 23": "https://www.generalasp.com/d23/onlineapp/default.aspx?all=1",
+    "Homewood-Flossmoor Community High School District 233": "https://www.generalasp.com/d233/onlineapp/default.aspx?all=1",
+    "Northbrook Elementary School District 27": "https://www.generalasp.com/D27/onlineapp/default.aspx?all=1",
+    "Glenview Community Consolidated School District 34": "https://www.generalasp.com/d34/onlineapp/default.aspx?all=1",
+    "Kenilworth School District 38": "https://www.generalasp.com/d38/onlineapp/default.aspx?all=1",
+    "Mount Prospect School District 57": "https://www.generalasp.com/d57/onlineapp/default.aspx?all=1",
+    "Park Ridge Community Consolidated School District 64": "https://www.generalasp.com/d64/onlineapp/default.aspx?all=1",
+    "Fairview School District 72": "https://www.generalasp.com/D72/onlineapp/default.aspx?all=1",
+    "Eisenhower Cooperative": "https://www.generalasp.com/EisenCoop/onlineapp/default.aspx?all=1",
+    "Rich Township High School District 227": "https://www.generalasp.com/Rich227/onlineapp/default.aspx?all=1",
+    "Hazel Crest School District 152-5": "https://www.generalasp.com/sd1525/onlineapp/default.aspx?all=1",
+    "Thornton Township High School District 205": "https://www.generalasp.com/tthsd205/onlineapp/default.aspx?all=1",
+    "Leyden Community High School District 212": "https://www.leyden212.org/about-us/departments/human-resources-department/jobs?all=1"
+};
+
+// Normalization function
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/school district/g, "")
+              .replace(/community consolidated/g, "")
+              .replace(/community unit/g, "")
+              .replace(/township/g, "")
+              .replace(/sd/g, "")
+              .replace(/cusd/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Boundaries (Illinois is '17', Pennsylvania is '42')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='17'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+
+    // 1. Define Style Function
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    // 2. Create the Layer FIRST (so it exists for the resetStyle)
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function () {
+                    if (link && link !== "") {
+                        // Log to Google Analytics
+                        if (typeof gtag === "function") {
+                            gtag('event', 'district_link_click', {
+                                'district_name': name,
+                                'state': 'Illinois'
+                            });
+                        }
+                        // Open Link
+                        window.open(link, "_blank");
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+</body>
+</html>

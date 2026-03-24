@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Illinois School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Pennsylvania School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+// Center on Pennsylvania
+var map = L.map('map').setView([40.8, -77.8], 7);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search PA Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Nazareth Area School District": "https://www.applitrack.com/Nazarethasd/onlineapp/default.aspx?all=1",
+    "Bangor Area School District": "https://www.bangor.k12.pa.us/site/default.aspx?PageType=14&DomainID=27&PageID=614&ModuleInstanceID=864&ViewID=fa1f7d98-e7bf-458b-a7e2-7d51c266e481&IsMoreExpandedView=True",
+    "Pen Argyl Area School District": "https://www.penargylschooldistrict.org/district/employment_opportunities",
+    "Easton Area School District": "https://eastonsd.tedk12.com/hire/index.aspx",
+    "Northhampton Area School District": "https://www.applitrack.com/nasdschools/onlineapp/default.aspx?all=1",
+    "Bethlehem Area School District": "https://www.applitrack.com/basdschools/onlineapp/default.aspx?all=1",
+    "Wilson Area School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinwilsonpa/Rapplmnu03.w",
+    "Saucon Valley School District": "https://svpanthers.tedk12.com/hire/index.aspx",
+    "East Penn School District": "https://www.applitrack.com/eastpennsd/onlineapp/default.aspx?all=1",
+    "Northwestern Lehigh School District": "https://nwlehigh.tedk12.com/hire/index.aspx",
+    "Northern Lehigh School District": "https://www.nlsd.org/district-office-c6/employment/employment-opportunities",
+    "Parkland School District": "https://parklandsd.tedk12.com/hire/index.aspx",
+    "Whitehall-Coplay School District": "https://www.applitrack.com/whitehallcoplay/onlineapp/default.aspx?all=1",
+    "Allentown City School District": "https://www.applitrack.com/allentown/onlineapp/default.aspx?all=1",
+    "Salisbury Township School District": "https://www.salisburysd.org/documents/employment/current-job-openings/63998",
+    "Southern Lehigh School District": "https://www.applitrack.com/slsd/onlineapp/default.aspx?all=1",
+    "Catasauqua Area School District": "https://www.cattysd.org/departments/human-resources12/job-opportunities",
+    "Upper Moreland School District": "https://www.applitrack.com/umtsd/onlineapp/default.aspx?all=1",
+    "Upper Perkiomen School District": "https://upsd.tedk12.com/hire/index.aspx",
+    "Boyertown Area School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinboyertownpa/Rapplmnu03.w",
+    "Perkiomen Valley School District": "https://perkiomenvalley.tedk12.com/hire/index.aspx",
+    "Abington School District": "https://skybiz.abington.k12.pa.us/scripts/wsisa.dll/WService=wsFin/rappljoblst484.w",
+    "Upper Dublin School District": "https://udsd.tedk12.com/hire/index.aspx",
+    "Lower Moreland School District": "https://lowermoreland.tedk12.com/hire/index.aspx",
+    "Hatboro Horsham School District": "https://hatborohorsham.tedk12.com/hire/index.aspx",
+    "North Penn School District": "https://www.applitrack.com/npenn/onlineapp/default.aspx?all=1",
+    "Souderton Area School District": "https://souderton.tedk12.com/hire/index.aspx",
+    "Pottsgrove School District": "https://pottsgrovepa.schoolspring.com/",
+    "Pottstown School District": "https://pottstown.tedk12.com/hire/index.aspx",
+    "Spring Ford Area School District": "https://www.applitrack.com/springford/onlineapp/default.aspx?all=1",
+    "Methacton School District": "https://www.applitrack.com/methacton/onlineapp/default.aspx?all=1",
+    "Wissahickon School District": "https://wissahickon.tedk12.com/hire/index.aspx",
+    "Jenkintown School District": "https://jenkintowndrakes.org/employment/",
+    "Cheltenham School District": "https://cheltenhamtwp.tedk12.com/hire/index.aspx",
+    "Springfield Township School District": "https://springfieldtwppa.tedk12.com/hire/index.aspx",
+    "Colonial School District": "https://colonialsd.tedk12.com/hire/index.aspx",
+    "Norristown Area School District": "https://nasd.tedk12.com/hire/index.aspx",
+    "Upper Merion School District": "https://jobs.redroverk12.com/org/uppermerion",
+    "Lower Merion School District": "https://lowermerion.tedk12.com/hire/index.aspx",
+    "Marple Newtown School District": "https://marplenewtown.tedk12.com/hire/Index.aspx",
+    "Penn-Delco School District": "https://penndelco.tedk12.com/hire/index.aspx",
+    "Chichester School District": "https://chichester.tedk12.com/hire/index.aspx",
+    "Upper Darby School District": "https://upperdarby.tedk12.com/hire/index.aspx",
+    "Southeast Delco School District": "https://sedelco.tedk12.com/hire/index.aspx",
+    "Chester Upland School District": "https://www.applitrack.com/chesteruplandsd/onlineapp/default.aspx?all=1",
+    "Springfield School District": "https://springfieldpa.tedk12.com/hire/index.aspx",
+    "Interboro School District": "https://interboro.tedk12.com/hire/index.aspx",
+    "Rose Tree Media School District": "https://rtmsd.tedk12.com/hire/index.aspx",
+    "Haverford Township School District": "https://haverford.tedk12.com/hire/index.aspx",
+    "Radnor Township School District": "https://radnortownship.tedk12.com/hire/index.aspx",
+    "William Penn School District": "https://williampenn.tedk12.com/hire/index.aspx",
+    "Ridley School District": "https://www.ridleysd.org/documents/community/employment/job-postings/professional-teaching-positions/457502",
+    "Warwick School District": "https://www.warwicksd.org/website/jobs_all.php",
+    "Ephrata Area School District": "https://www.applitrack.com/easdpa/onlineapp/default.aspx?all=1",
+    "Donegal School District": "https://www.applitrack.com/donegalsd/onlineapp/default.aspx?all=1",
+    "Hempfield School District": "https://www.applitrack.com/hempfieldsd/onlineapp/default.aspx?all=1",
+    "Conestoga Valley School District": "https://www.conestogavalley.org/district/job-opportunities",
+    "Eastern Lancaster County School District": "https://elanco.tedk12.com/hire/index.aspx",
+    "Pequea Valley School District": "https://www.pequeavalley.org/our-district/employmentvolunteer-opportunities/overview",
+    "Columbia Borough School District": "https://columbiabsd.tedk12.com/hire/index.aspx",
+    "Elizabethtown Area School District": "https://www.applitrack.com/elizabethtown/onlineapp/default.aspx?all=1",
+    "Manheim Central School District": "https://manheimcentral.tedk12.com/hire/index.aspx",
+    "Cocalico School District": "https://www.cocalico.org/depts_/human_resources_employment/professional_staff_openings",
+    "Manheim Township School District": "https://jobs.redroverk12.com/org/mtwp",
+    "Lancaster School Dsitric": "https://www.schooljobs.com/careers/sdlancaster",
+    "Penn Manor School District": "https://jobs.redroverk12.com/org/2470",
+    "Solanco School District": "https://www.applitrack.com/solanco/onlineapp/default.aspx?all=1",
+    "Lampeter Strasburg School District": "https://www.applitrack.com/lssdpa/onlineapp/default.aspx?all=1",
+    "Phoenixville Area School District": "https://www.applitrack.com/pasd/onlineapp/default.aspx?all=1",
+    "Tredyffrin-Easttown School District": "https://www.applitrack.com/tesd/onlineapp/default.aspx?all=1",
+    "Owen J. Roberts School District": "https://www.applitrack.com/owenjroberts/onlineapp/default.aspx?all=1",
+    "Great Valley School District": "https://www.applitrack.com/gvsd/onlineapp/default.aspx?all=1",
+    "West Chester Area School District": "https://wcasd.tedk12.com/hire/index.aspx",
+    "Twin Valley School District": "https://www.tvsd.org/page/job-openings",
+    "Downingtown Area School District": "https://www.applitrack.com/dasd/onlineapp/default.aspx?all=1",
+    "Coatesville Area School District": "https://casds.tedk12.com/hire/index.aspx",
+    "Octorara Area School District": "https://www.applitrack.com/octorara/onlineapp/default.aspx?all=1",
+    "Unionville-Chadds Ford School District": "https://ucfsd.tedk12.com/hire/index.aspx",
+    "Kennett Consolidated School District": "https://kcsd.tedk12.com/hire/index.aspx",
+    "Avon Grove School District": "https://www.applitrack.com/avongrove/onlineapp/default.aspx?all=1",
+    "Oxford Area School District": "https://jobs.redroverk12.com/org/3265?categories=Food+Service",
+    "Palmyra Area School District": "https://www.applitrack.com/palmyra/onlineapp/default.aspx?all=1",
+    "Annville-Cleona School District": "https://acschools.tedk12.com/hire/index.aspx",
+    "Northern Lebanon School District": "https://www.applitrack.com/norleb/onlineapp/default.aspx?all=1",
+    "Cornwall-Lebanon School District": "https://cornwalllebanon.tedk12.com/hire/Index.aspx",
+    "Lebanon School District": "https://www.applitrack.com/lebanonsd/onlineapp/default.aspx?all=1",
+    "Eastern Lebanon County School District": "https://www.elcosd.org/domain/20",
+    "Exeter Township School District": "https://www.applitrack.com/ExeterTownship/onlineapp/default.aspx?all=1",
+    "Antietam School District": "https://www.antietamsd.org/domain/280",
+    "Reading School District": "https://www.applitrack.com/readingsd/onlineapp/default.aspx?all=1",
+    "Oley Valley School District": "https://www.oleyvalleysd.org/en-US/human-resources-4b105938/employment-2b6a60b8",
+    "Wyomissing School District": "https://www.applitrack.com/wyoarea/onlineapp/default.aspx?all=1",
+    "Governor Mifflin School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfingovernormifflinpa/rappljoblst484.w?hqrbgrtid=85987",
+    "Daniel Boone Area School District": "https://www.applitrack.com/dboone/onlineapp/default.aspx?all=1",
+    "Tulpehocken Area School District": "https://www.tulpehocken.org/page/available-positions",
+    "Hamburg Area School District": "https://www.applitrack.com/hasd/onlineapp/default.aspx?all=1",
+    "Kutztown Area School District": "https://www.kasd.org/employment/positions-available",
+    "Conrad Weiser Area School District": "https://skyweb.conradweiser.org/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Schuylkill Valley School District": "https://www.schuylkillvalley.org/careers?all=1&AppliTrackZipRadius=5&AppliTrackSort=type&AppliTrackLayoutMode=detail",
+    "Wilson School District": "https://www.wilsonsd.org/o/wsd/page/employment-opportunities",
+    "Fleetwood Area School District": "https://www.fleetwoodasd.org/current-openings",
+    "Brandywine Heights School District": "https://www.applitrack.com/bhasd/onlineapp/default.aspx?all=1",
+    "Muhlenberg School District": "https://www.applitrack.com/muhlsdk12/onlineapp/default.aspx?all=1",
+    "Harrisburg City School District": "https://www.generalasp.com/hbgsd/onlineapp/default.aspx?all=1",
+    "Central Dauphin School District": "https://cdschools.tedk12.com/hire/index.aspx",
+    "Halifax Area School District": "https://www.applitrack.com/halifax/onlineapp/default.aspx?all=1",
+    "Williams Valley School District": "https://www.wvschools.net/apps/jobs/index.jsp?start=0&uREC_ID=&type=&termREC_ID=&id=&hideMenu=&pREC_ID=",
+    "Middletown Area School District": "https://www.raiderweb.org/our_district/employment",
+    "Susquhanna Township School District": "https://www.applitrack.com/hannasd/onlineapp/default.aspx?all=1",
+    "Millersburg Area School District": "https://www.mlbgsd.k12.pa.us/page/job-opportunities",
+    "Lower Dauphin School District": "https://www.ldsd.org/employment",
+    "Derry Township School District": "https://www.hershey.k12.pa.us/our-district/careers",
+    "Steelton Highspire School District": "https://www.shsd.k12.pa.us/employment-opportunities/current-openings",
+    "Upper Dauphin Area School District": "https://udasd.org/employment/",
+    "Bensalem Township School District": "https://bensalemsd.tedk12.com/hire/index.aspx",
+    "Bristol Burough School District": "https://www.bbsd.org/jobposts.asp",
+    "Bristol Township School District": "https://www.bristoltwpsd.org/departments/human_resources/general_maintenance_worker",
+    "Centennial School District": "https://www.applitrack.com/centennialsd/onlineapp/default.aspx?all=1",
+    "Central Bucks School District": "https://www.applitrack.com/cbsd/onlineapp/default.aspx?all=1",
+    "Council Rock School District": "https://crsd.tedk12.com/hire/index.aspx",
+    "Morrisville Borough School District": "https://mv.tedk12.com/hire/index.aspx",
+    "Neshaminy School District": "https://neshaminypa.tedk12.com/hire/index.aspx",
+    "New Hope-Solebury School District": "https://newhope.tedk12.com/hire/index.aspx",
+    "Palisades School District": "https://palisades.tedk12.com/hire/index.aspx",
+    "Pennridge School District": "https://pennridge.tedk12.com/hire/index.aspx",
+    "Pennsbury School District": "https://pennsbury.tedk12.com/hire/index.aspx",
+    "Quakertown Community School District": "https://quakertown.schoolspring.com/",
+    "Allegheny Valley School District": "https://www.avsdweb.org/aboutus/employment",
+    "Avonworth School District": "https://www.avonworth.k12.pa.us/about/employment-opportunities",
+    "Baldwin-Whitehall School District": "https://www.bwschools.net/our-district/district-departments/human-resources",
+    "Bethel Park School District": "https://www.applitrack.com/bpsd/onlineapp/default.aspx?all=1",
+    "Brentwood Borough School District": "https://www.bb-sd.com/Employment.aspx",
+    "Carlynton School District": "https://www.carlynton.net/employment",
+    "Chartiers Valley School District": "https://www.cvsd.net/departments/human-resources/job-openings",
+    "Clairton City School District": "https://www.ccsdbears.org/district/employment-jobs",
+    "Cornell School District": "",
+    "Deer Lakes School District": "https://www.deerlakes.net/58518_3",
+    "Duquesne City School District": "https://www.dukecitysd.org/about-us/careers",
+    "East Allegheny School District": "https://www.eawildcats.net/Page/467",
+    "Elizabeth Forward School District": "https://www.efsd.net/departments/human-resources/employment-opportunities",
+    "Fox Chapel Area School District": "https://www.applitrack.com/fcasd/onlineapp/default.aspx?all=1",
+    "Gateway School District": "https://www.gatewayk12.org/resources/employment-opportunities",
+    "Hampton Township School District": "https://www.applitrack.com/htsd/onlineapp/jobpostings/view.asp?all=1",
+    "Highlands School District": "https://www.applitrack.com/Highlands/onlineapp/default.aspx?all=1",
+    "Keystone Oaks School District": "https://www.kosd.org/employment-opportunities",
+    "McKeesport Area School District": "https://www.mckasd.net/about/employment",
+    "Montour School District": "https://www.montourschools.com/apps/pages/index.jsp?uREC_ID=349060&type=d&pREC_ID=758233",
+    "Moon Area School District": "https://www.pa-educator.net/search?keywords=speech&countyIds=1",
+    "Mt. Lebanon School District": "https://www.applitrack.com/mtlsd/onlineapp/default.aspx?all=1",
+    "North Allegheny School District": "https://www.applitrack.com/northallegheny/onlineapp/default.aspx?all=1",
+    "North Hills School District": "https://www.applitrack.com/nhsd/onlineapp/default.aspx?all=1",
+    "Northgate School District": "https://www.northgatesd.net/about/employment",
+    "Penn Hills School District": "https://pennhills.tedk12.com/hire/index.aspx",
+    "Pine-Richland School District": "https://www.applitrack.com/pinerichland/onlineapp/default.aspx?all=1",
+    "Pittsburgh Public School District": "https://selfservice.pghschools.org/ess/employmentopportunities/default.aspx",
+    "Plum Borough School District": "https://www.applitrack.com/pbsd/onlineapp/default.aspx?all=1",
+    "Quaker Valley School District": "https://quakervalley.schoolspring.com/",
+    "Riverview School District": "https://www.rsd.k12.pa.us/Employment.aspx",
+    "Shaler Area School District": "https://shalerarea.org/departments/human-resources/employment-opportunities/",
+    "South Allegheny School District": "https://www.southallegheny.org/apps/pages/index.jsp?uREC_ID=2832800&type=d&pREC_ID=2418987",
+    "South Fayette Township School District": "https://southfayettepe.schoolspring.com/",
+    "South Park School District": "https://sparksd.schoolspring.com/",
+    "Steel Valley School District": "https://www.steelvalleysd.org/about/employment-postings",
+    "Sto-Rox School District": "https://www.srsd.k12.pa.us/employment",
+    "Upper St. Clair School District": "https://uscsd.schoolspring.com/",
+    "West Allegheny School District": "https://www.westasd.org/HumanResources.aspx",
+    "West Jefferson Hills School District": "https://www.applitrack.com/wjhsd/onlineapp/default.aspx?all=1",
+    "Wilkinsburg School District": "https://www.applitrack.com/wilkinsburgschools/onlineapp/default.aspx?all=1",
+    "The Watson Institute": "https://www.thewatsoninstitute.org/careers/job-opportunities/",
+    "Woodland Hills School District": "https://www.applitrack.com/whsd/onlineapp/default.aspx?all=1",
+    "Allegheny-Clarion Valley School District": "https://www.acvsd.org/district/employment",
+    "Apollo-Ridge School District": "https://www.apolloridge.com/apps/pages/index.jsp?uREC_ID=828715&type=d&pREC_ID=2509254",
+    "Armstrong School District": "https://www.asd.k12.pa.us/apps/pages/jobs",
+    "Freeport Area School District": "https://www.freeport.k12.pa.us/employment/professional-staff",
+    "Karns City Area School District": "https://www.kcasdk12.org/our-district/employment-opportunities/job-postings",
+    "Kiski Area School District": "https://www.kiskiarea.com/apps/pages/index.jsp?uREC_ID=769599&type=d&pREC_ID=1318801",
+    "Leechburg Area School District": "https://www.leechburg.k12.pa.us/apps/pages/index.jsp?uREC_ID=1573790&type=d&pREC_ID=1702522",
+    "Aliquippa School District": "https://quipsd.schoolspring.com/",
+    "Ambridge Area School District": "https://www.ambridge.k12.pa.us/?p=18479",
+    "Beaver Area School District": "https://www.basd.k12.pa.us/Employment.aspx",
+    "Big Beaver Falls Area School District": "https://www.tigerweb.org/homepage-links/employment",
+    "Blackhawk School District": "https://www.bsd.k12.pa.us/Careers.aspx",
+    "Central Valley School District": "https://www.centralvalleysd.org/Employment.aspx",
+    "Hopewell Area School District": "https://www.hopewell.k12.pa.us/employment.aspx",
+    "Midland Borough School District": "https://www.midlandpa.org/EmploymentOpportunities",
+    "New Brighton Area School District": "https://www.nbasd.org/employment",
+    "Riverside Beaver County School District": "https://www.riverside.k12.pa.us/apps/pages/index.jsp?uREC_ID=912387&type=d&pREC_ID=2677846",
+    "Rochester Area School District": "https://www.rasd.org/employment-opportunities/new-page",
+    "South Side Area School District": "https://www.sssd.k12.pa.us/page/employment",
+    "Western Beaver": "https://www.westernbeaver.org/page/professional-opportunities",
+    "Butler Area School District": "https://www.applitrack.com/basdk12/onlineapp/default.aspx?all=1",
+    "Mars Area School District": "https://www.applitrack.com/marsk12/onlineapp/default.aspx?all=1",
+    "Moniteau School District": "https://www.moniteau.org/human-resources",
+    "Seneca Valley School District": "https://senecavalley.schoolspring.com/about",
+    "Slippery Rock Area School District": "https://www.slipperyrock.k12.pa.us/apps/jobs/",
+    "Knoch School District": "https://southbutler.schoolspring.com/",
+    "North Catholic High School": "",
+    "Albert Gallatin Area School District": "https://www.agasd.org/Employment.aspx",
+    "Belle Vernon Area School District": "https://www.bvasd.net/apps/pages/index.jsp?uREC_ID=578164&type=d",
+    "Brownsville Area School District": "https://www.basd.org/page/employment",
+    "Connellsville Area School District": "https://www.casdfalcons.org/apps/pages/index.jsp?uREC_ID=767033&type=d&pREC_ID=1170499",
+    "Frazier School District": "https://www.frazierschooldistrict.org/employment",
+    "Laurel Highlands School District": "https://www.lhsd.org/employment-information",
+    "Uniontown Area School District": "https://www.uasdraiders.org/district_information/employment",
+    "Carmichaels Area School District": "https://www.carmarea.org/apps/pages/index.jsp?uREC_ID=575156&type=d&pREC_ID=1112338",
+    "Central Greene School District": "https://www.cgsd.org/employment/current-employment-opportunities",
+    "Jefferson-Morgan School District": "https://www.jmsd.org/apps/pages/index.jsp?uREC_ID=382021&type=d&pREC_ID=1066540",
+    "Southeastern Greene School District": "https://www.segsd.org/page/employment-opportunities",
+    "West Greene School District": "https://www.wgsd.org/page/employment",
+    "River Valley School District": "https://www.rivervalleysd.org/departments/human-resources/employment-opportunities",
+    "Homer-Center School District": "https://www.homercenter.org/apps/pages/index.jsp?uREC_ID=1106888&type=d&pREC_ID=1512507",
+    "Indiana Area School District": "https://www.iasd.cc/apps/pages/jobs",
+    "Marion Center Area School District": "https://www.mcasd.net/apps/pages/index.jsp?uREC_ID=1063853&type=d&pREC_ID=1399986",
+    "Penns Manor Area School District": "https://www.pennsmanor.org/apps/jobs/",
+    "Purchase Line School District": "https://www.plsd.k12.pa.us/apps/pages/index.jsp?uREC_ID=864912&type=d&pREC_ID=1186290",
+    "Ellwood City Area School District": "https://www.ecasdk12.org/employment",
+    "Laurel School District": "https://www.laurelspartans.com/employment",
+    "Mohawk Area School District": "https://www.mohawk.k12.pa.us/district/human-resources/career-opportunities",
+    "Neshannock Township School District": "https://www.ntsd.org/district/employment/",
+    "New Castle Area School District": "https://www.ncasd.com/district/employment/",
+    "Shenango School District": "https://www.shenangoschools.org/district/employment/",
+    "Union Area School District": "https://www.unionareasd.org/district/employment-opportunities/",
+    "Wilmington Area School District": "https://www.wasd.school/district/employment/",
+    "Avella Area School District": "https://www.avellasd.org/district/employment",
+    "Bentworth School District": "https://www.bentworth.org/apps/jobs/",
+    "Bethlehem-Center School District": "https://www.bcasd.net/our-district/employment",
+    "Burgettstown Area School District": "https://www.burgettstown.k12.pa.us/employment/employment-opportunities/overview-employment",
+    "California Area School District": "https://www.calsd.org/apps/pages/index.jsp?uREC_ID=1795416&type=d&pREC_ID=1970239",
+    "Canon-McMillan School District": "https://www.applitrack.com/CanonMcMillanSD/onlineapp/default.aspx?all=1",
+    "Charleroi Area School District": "https://www.applitrack.com/CanonMcMillanSD/onlineapp/default.aspx?all=1",
+    "Chartiers-Houston School District": "https://www.chbucs.k12.pa.us/page/current-postings",
+    "Fort Cherry School District": "https://www.fortcherry.org/EmploymentOpportunities.aspx",
+    "McGuffey School District": "https://www.mcguffey.k12.pa.us/employment.aspx",
+    "Peters Township School District": "https://www.ptsd.k12.pa.us/employment.aspx",
+    "Ringgold School District": "https://ringgold.schoolspring.com/",
+    "Trinity Area School District": "https://www.trinitypride.org/employment-opportunities",
+    "Washington School District": "https://www.washington.k12.pa.us/domain/114",
+    "Burrell School District": "https://www.burrell.k12.pa.us/our-district/employment",
+    "Derry Area School District": "https://www.applitrack.com/derryarea/onlineapp/default.aspx?all=1",
+    "Franklin Regional School District": "https://www.applitrack.com/franklinregional/onlineapp/default.aspx?all=1",
+    "Greater Latrobe School District": "https://www.applitrack.com/glsd/onlineapp/default.aspx?all=1",
+    "Greensburg-Salem School District": "https://www.greensburgsalem.org/about/district-departments/human-resources",
+    "Hempfield Area School District": "https://www.hasdpa.net/apps/pages/index.jsp?uREC_ID=1190057&type=d&pREC_ID=1457406",
+    "Jeannette City School District": "https://www.jeannetteschooldistrict.org/apps/jobs/",
+    "Monessen City School District": "https://www.monessenschooldistrict.com/apps/pages/index.jsp?uREC_ID=1300704&type=d&pREC_ID=2088849",
+    "Mount Pleasant Area School District": "https://www.mpasd.net/page/employment-opportunities",
+    "Norwin School District": "https://www.norwinsd.org/apps/pages/index.jsp?uREC_ID=1152753&type=d&pREC_ID=2119671",
+    "Penn-Trafford School District": "https://www.penntrafford.org/apps/pages/current_openings",
+    "Southmoreland School District": "https://www.southmoreland.net/our-district/employment/employment",
+    "Yough School District": "https://www.youghsd.net/employment_information"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/school district/g, "")
+              .replace(/city school district/g, "")
+              .replace(/community school district/g, "")
+              .replace(/consolidated school district/g, "")
+              .replace(/of/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Boundaries for Pennsylvania (STATEFP='42')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='42'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function () {
+                    if (link && link !== "") {
+                        // Track in Google Analytics
+                        if (typeof gtag === "function") {
+                            gtag('event', 'district_link_click', {
+                                'district_name': name,
+                                'state': 'Pennsylvania' // This is the key change!
+                            });
+                        }
+                        window.open(link, "_blank");
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+</body>
+</html>
