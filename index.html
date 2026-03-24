@@ -15,26 +15,42 @@
     </script>
 
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
-        h1 { text-align: center; margin: 20px 0; }
-        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        h1 { text-align: center; margin: 20px 0; color: #2c3e50; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-        /* Legend Styling */
+        /* Professional Legend Styling */
         .legend {
             background: white;
-            padding: 10px;
-            line-height: 18px;
-            color: #555;
-            border-radius: 5px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            color: #444;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 14px;
+            border: 1px solid #eee;
+            line-height: 1.5;
         }
-        .legend i {
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            color: #2c3e50;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center; /* This perfectly centers the box with the text */
+            margin-bottom: 8px;
+        }
+        .legend-row:last-child { margin-bottom: 0; }
+        
+        .legend-box {
             width: 18px;
             height: 18px;
-            float: left;
-            margin-right: 8px;
-            opacity: 0.7;
-            border: 1px solid #999;
+            margin-right: 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -68,7 +84,7 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
 
         return {
             fillColor: baseColor,
-            weight: 1,
+            weight: 1.5,
             opacity: 1,
             color: "white",
             fillOpacity: 0.7
@@ -79,7 +95,8 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
         var layer = e.target;
         layer.setStyle({
             fillColor: "#4da6ff", // Bright blue on hover
-            fillOpacity: 0.9
+            fillOpacity: 0.9,
+            weight: 2
         });
         
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
@@ -99,7 +116,7 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
             'state_name': stateName
         });
 
-        // Only redirect if the state is in our supported list
+        // Redirect logic
         var supportedStates = ["Illinois","Wisconsin","Michigan","Indiana","Missouri","Pennsylvania"];
         if (supportedStates.includes(stateName)) {
             window.location.href = stateName.toLowerCase() + ".html";
@@ -112,7 +129,7 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
             mouseout: resetHighlight,
             click: zoomToFeature
         });
-        layer.bindTooltip(feature.properties.name);
+        layer.bindTooltip(feature.properties.name, { sticky: true });
     }
 
     var geojson = L.geoJson(data, {
@@ -125,15 +142,27 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
 
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'legend');
-        div.innerHTML += '<strong>Map Status</strong><br>';
-        div.innerHTML += '<i style="background: #28a745"></i> Job Links Live<br>';
-        div.innerHTML += '<i style="background: #cccccc"></i> Coming Soon';
+        div.innerHTML = '<span class="legend-title">Map Status</span>';
+        
+        // Active Row
+        div.innerHTML += `
+            <div class="legend-row">
+                <div class="legend-box" style="background: #28a745"></div>
+                <span>Job Links Live</span>
+            </div>`;
+            
+        // Inactive Row
+        div.innerHTML += `
+            <div class="legend-row">
+                <div class="legend-box" style="background: #cccccc"></div>
+                <span>Coming Soon</span>
+            </div>`;
+            
         return div;
     };
 
     legend.addTo(map);
 });
-
 </script>
 
 </body>
