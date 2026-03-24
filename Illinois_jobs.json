@@ -1,0 +1,12 @@
+{
+  "Chicago Public Schools": {
+    "nces": "17000",
+    "job": "https://chicagopublicschools.org/jobs",
+    "students": "250k"
+  },
+  "Springfield SD": {
+    "nces": "17001",
+    "job": "https://springfield.edu/jobs",
+    "students": "10k"
+  }
+}
