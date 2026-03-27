@@ -15,19 +15,11 @@
     </script>
     
     <style>
-        /* Exact Match to IL Styling */
+        /* Exact Match to IL CSS */
         body { margin: 0; font-family: Arial, sans-serif; }
         h1 { text-align: center; margin: 20px 0; }
         #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
-        
-        /* Matching the IL Button Style (Standard Grey) */
-        button { 
-            margin-left: 2.5%; 
-            margin-bottom: 10px; 
-            padding: 8px 15px; 
-            cursor: pointer; 
-        }
-
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
         .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
     </style>
 </head>
@@ -41,12 +33,14 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
+// Nevada-wide view
 var map = L.map('map').setView([38.5, -117.0], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+// Search Bar
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
     placeholder: "Search Zip or Address...",
@@ -58,7 +52,7 @@ var geocoder = L.Control.geocoder({
 })
 .addTo(map);
 
-// FULL LIST WITH ACCURATE FULL NAMES
+// Full List with Accurate Full Names
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -98,6 +92,7 @@ for (var fullName in jobLinks) {
     };
 }
 
+// Fetch Nevada Data (State Code 32)
 fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='32'&outFields=*&f=geojson")
 .then(res => res.json())
 .then(data => {
