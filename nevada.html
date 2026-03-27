@@ -15,11 +15,26 @@
     </script>
     
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; }
         h1 { text-align: center; margin: 20px 0; color: #2c3e50; }
         #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        button { margin-left: 2.5%; margin-top: 10px; margin-bottom: 10px; padding: 10px 20px; cursor: pointer; background-color: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; }
-        button:hover { background-color: #218838; }
+        
+        /* Grey Button Styling to match other states */
+        button { 
+            margin-left: 2.5%; 
+            margin-top: 10px; 
+            margin-bottom: 10px; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            background-color: #6c757d; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: #5a6268; }
+
         .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
     </style>
 </head>
@@ -33,14 +48,13 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-// 1. Nevada-wide view
 var map = L.map('map').setView([38.5, -117.0], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// 2. Search Bar
+// Search Bar
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
     placeholder: "Search Zip or Address...",
@@ -52,85 +66,87 @@ var geocoder = L.Control.geocoder({
 })
 .addTo(map);
 
-// 3. Nevada Job Links - Add more districts here as you find them!
+// FULL LIST WITH ACCURATE FULL NAMES
 var jobLinks = {
-    "Clark County School District": "https://www.ccsd.net/jobs/",
-    "Washoe County School District": "https://www.washoeschools.net/employment",
-    "Carson City School District": "https://www.applitrack.com/carsoncity/onlineapp/",
-    "Douglas County School District": "https://douglascountysd.tedk12.com/hire/index.aspx",
-    "Elko County School District": "https://www.ecsdnv.net/page/employment",
-    "Lyon County School District": "https://www.lyoncsd.org/page/human-resources"
+    "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
+    "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
+    "Clark County School District": "https://ccsd.taleo.net/careersection/2/jobsearch.ftl?lang=en",
+    "Douglas County School District": "https://www.applitrack.com/dcsd/onlineapp/default.aspx?all=1",
+    "Elko County School District": "https://elko.schoolspring.com/",
+    "Esmeralda County School District": "https://www.esmeraldacountyschools.com/en-US/employment-opportunities-6a623230",
+    "Eureka County School District": "https://www.eureka.k12.nv.us/employment/job_opportunities",
+    "Humboldt County School District": "https://hcsdnv.schoolspring.com/",
+    "Lander County School District": "https://www.lander.k12.nv.us/careers/available-positions",
+    "Lincoln County School District": "https://www.lcsdnv.com/page/Career-Opportunities/15259/Index.html",
+    "Lyon County School District": "https://www.applitrack.com/Lyoncsd/onlineapp/default.aspx?all=1",
+    "Mineral County School District": "https://www.applitrack.com/nvmcsd/onlineapp/default.aspx?all=1",
+    "Nye County School District": "https://www.applitrack.com/nye/onlineapp/default.aspx?all=1",
+    "Pershing County School District": "https://www.pcsdnv.com/page/employment",
+    "Storey County School District": "https://www.storeynv.com/careers",
+    "Washoe County School District": "https://washoe.atenterprise.powerschool.com/ats/job_board?APPLICANT_TYPE_ID=00000001&COMPANY_ID=00004845",
+    "White Pine County School District": "https://www.whitepine.k12.nv.us/team"
 };
 
-// 4. Normalization function (Same as your IL logic)
 function normalize(str) {
     if (!str) return "";
     return str.toLowerCase()
               .replace(/school district/g, "")
               .replace(/community consolidated/g, "")
               .replace(/community unit/g, "")
-              .replace(/township/g, "")
-              .replace(/sd/g, "")
-              .replace(/cusd/g, "")
+              .replace(/county/g, "")
               .replace(/[^a-z0-9]/g, "")
               .trim();
 }
 
 var lookup = {};
-for (var originalName in jobLinks) {
-    lookup[normalize(originalName)] = jobLinks[originalName];
+for (var fullName in jobLinks) {
+    lookup[normalize(fullName)] = {
+        displayName: fullName,
+        link: jobLinks[fullName]
+    };
 }
 
-// 5. Fetch Nevada Boundaries (STATEFP='32')
+// Fetch Nevada Data (State Code 32)
 fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='32'&outFields=*&f=geojson")
 .then(res => res.json())
 .then(data => {
 
-    function getStyle(feature) {
-        var name = feature.properties.NAME;
-        var hasLink = lookup.hasOwnProperty(normalize(name));
-        return {
-            fillColor: hasLink ? "#2ecc71" : "#e6e6e6", // Green for live links, Grey for pending
-            color: "#555555",
-            weight: 1,
-            fillOpacity: 0.6
-        };
-    }
-
     var geojsonLayer = L.geoJson(data, {
-        style: getStyle,
-        onEachFeature: function(feature, layer) {
+        style: function(feature) {
             var name = feature.properties.NAME;
-            var normName = normalize(name);
-            var link = lookup[normName];
+            var hasMatch = lookup.hasOwnProperty(normalize(name));
+            return {
+                fillColor: hasMatch ? "#2ecc71" : "#e6e6e6",
+                color: "white",
+                weight: 2,
+                fillOpacity: 0.7
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            var rawName = feature.properties.NAME;
+            var match = lookup[normalize(rawName)];
+            
+            var finalDisplayName = match ? match.displayName : rawName;
+            var link = match ? match.link : null;
 
-            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+            layer.bindTooltip("<b>" + finalDisplayName + "</b>" + (link ? "<br>(Click to view jobs)" : ""));
 
             layer.on({
-                mouseover: function(e) { 
-                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
-                },
-                mouseout: function(e) { 
-                    geojsonLayer.resetStyle(e.target); 
-                },
-                click: function(e) {
-                    // Log to GA
-                    gtag('event', 'district_link_click', {
-                        'district_name': name,
-                        'state': 'Nevada'
-                    });
-
+                mouseover: function(e) { e.target.setStyle({ fillOpacity: 0.9, weight: 3 }); },
+                mouseout: function(e) { geojsonLayer.resetStyle(e.target); },
+                click: function() {
                     if (link) {
+                        gtag('event', 'click_district', { 
+                            'district_full_name': finalDisplayName, 
+                            'state': 'Nevada' 
+                        });
                         window.open(link, '_blank');
                     }
                 }
             });
         }
     }).addTo(map);
-})
-.catch(err => console.error("Error loading Nevada districts:", err));
-
+});
 </script>
-
 </body>
 </html>
