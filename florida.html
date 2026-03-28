@@ -121,7 +121,7 @@ var jobLinks = {
 
 function normalize(str) {
     if (!str) return "";
-    return str.toLowerCase()
+    let n = str.toLowerCase()
               .replace(/school district/g, "")
               .replace(/district schools/g, "")
               .replace(/public schools/g, "")
@@ -133,6 +133,12 @@ function normalize(str) {
               .replace(/county/g, "")
               .replace(/[^a-z0-9]/g, "")
               .trim();
+    
+    // --- MANUAL OVERRIDES FOR GEODATA DISCREPANCIES ---
+    if (n === "dade") return "miamidade"; // Fixes Miami-Dade
+    if (n === "stjohns") return "stjohns"; // Ensures consistency
+    
+    return n;
 }
 
 var lookup = {};
