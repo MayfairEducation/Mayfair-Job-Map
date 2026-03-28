@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Florida School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Florida School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+// Florida-wide view
+var map = L.map('map').setView([27.8, -83.5], 7);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Search Bar: Zooms to area WITHOUT dropping a marker
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Alachua County Public Schools": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinalachuafl/Rapplmnu03.w",
+    "Baker County School District": "https://bakerskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Bay District Schools": "https://focus.bayschools.net/focus/jobs/#!Jobs",
+    "Bradford County School District": "https://bradfordskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Brevard Public Schools": "https://iss.brevard.k12.fl.us/JOBLST.pgm",
+    "Broward County Public Schools": "https://careers.browardschools.com/search/?q=&",
+    "Calhoun County School District": "https://ats3.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=00012151",
+    "Charlotte County Public Schools": "https://charlotteschools.schoolspring.com/",
+    "Citrus County Schools": "https://skyfin.citrusschools.org:444/scripts/wsisa.dll/WService=wsFin/rappljoblst484.w",
+    "Clay County Schools": "https://oneclay.schoolspring.com/",
+    "Collier County Public Schools": "https://a1-3.applitrack.com/collier/onlineapp/default.aspx?all=1",
+    "Columbia County School District": "https://columbiaskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "DeSoto County School District": "https://www.applitrack.com/desotoschools/onlineapp/default.aspx?all=1",
+    "Dixie County School District": "https://dixieskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Duval County Public Schools": "https://duvalschools.schoolspring.com/",
+    "Escambia County School District": "https://apps2.winocular.com/Escambia/workspace/wSpace.exe?Action=wsJobsMain",
+    "Flagler Schools": "https://flaglerschools.schoolspring.com/",
+    "Franklin County School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinfranklincoflpaec/rapplmnu03.w",
+    "Gadsden County School District": "https://gadsdenschools.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=00005588",
+    "Gilchrist County School District": "https://gilchristskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Glades County School District": "https://skyward.glades-schools.org/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Gulf County School District": "https://gulfcoschools.com/district/employment/",
+    "Hamilton County School District": "https://hamiltonskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Hardee County School District": "https://www.hardee.k12.fl.us/page/recruitment",
+    "Hendry County School District": "https://www.applitrack.com/hendry/onlineapp/default.aspx?all=1",
+    "Hernando County Schools": "https://www.hernandoschools.org/jobs-home",
+    "Highlands County School District": "https://www.applitrack.com/highlandscounty/onlineapp/default.aspx?all=1",
+    "Hillsborough County Public Schools": "https://css-sdhc-prd.inforcloudsuite.com/hcm/Jobs/form/JobBoard%28HCPS,HCPS%20JOB%20BOARD%29.JobSearchCompositeForm?navigation=JobBoard%28HCPS,HCPS%20JOB%20BOARD%29.JobSearchCompositeFormNav&csk.JobBoard=HCPS%20JOB%20BOARD&csk.HROrganization=HCPS",
+    "Holmes County School District": "https://www.hdsb.org/employment",
+    "Indian River County School District": "https://www.applitrack.com/indianriver/onlineapp/default.aspx?all=1",
+    "Jackson County School District": "https://www.applitrack.com/paec/onlineapp/jobpostings/view.asp?dist=2044&district=All&category=All",
+    "Jefferson County School District": "https://www.jeffersonschools.net/careers",
+    "Lafayette County School District": "https://lafayetteskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rappljoblst484.w",
+    "Lake County Schools": "https://lakecsd.schoolspring.com/",
+    "Lee County School District": "https://apply.leeschools.net/",
+    "Leon County Schools": "https://ats3.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=JA001601",
+    "Levy County School District": "https://levyskyward.nefec.org/scripts/wsisa.dll/WService=wsFin/rappljoblst484.w",
+    "Liberty County School District": "https://ats3.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=00012159",
+    "Madison County School District": "https://skyward.mcsbfl.us:444/scripts/wsisa.dll/WService=wsFin/rappljoblst463.w",
+    "Manatee County School District": "https://careers.manateeschools.net/psc/HCPRDC/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Page=HRS_CAREERS_FL&Action=U&FOCUS=Applicant&SiteId=1&",
+    "Marion County Public Schools": "https://www.marionschools.net/departments/careers_at_mcps/current_openings",
+    "Martin County School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinmartincofl/rapplmnu03.w",
+    "Miami-Dade County Public Schools": "https://apply.dadeschools.net/search/",
+    "Monroe County School District": "https://www.applitrack.com/keysschools/onlineapp/default.aspx?all=1",
+    "Nassau County School District": "https://www.applitrack.com/nassau/onlineapp/default.aspx?all=1",
+    "Okaloosa County School District": "https://okaloosa.focusschoolsoftware.com/focus/jobs/#!Jobs",
+    "Okeechobee County School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinokeechobeedrfl/rapplmnu03.w",
+    "Orange County Public Schools": "https://www.ocps.net/careers-home",
+    "Osceola County School District": "https://jobs.osceolaschools.net/jobs",
+    "Palm Beach County School District": "https://erp.palmbeach.k12.fl.us:8009/psc/HRPRDJ/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?FOCUS=Applicant&SiteId=1&&Page=HRS_CAREERS_FL",
+    "Pasco County Schools": "https://pasco.schoolspring.com/",
+    "Pinellas County Schools": "https://ats3.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=OA002067",
+    "Polk County Public Schools": "https://www.polkschoolsfl.com/careers/jobopenings",
+    "Putnam County School District": "https://putnamskyward.nefec.org/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Santa Rosa County School District": "https://santarosa.schoolspring.com/",
+    "Sarasota County Schools": "https://www.sarasota.k12.fl.us/jobs/",
+    "Seminole County Public Schools": "https://careers.scps.k12.fl.us/psc/HCPRD/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Action=U&FOCUS=Applicant&SiteId=1&&Page=HRS_CAREERS_FL",
+    "St. Johns County School District": "https://www.applitrack.com/stjohns/onlineapp/default.aspx?all=1",
+    "St. Lucie Public Schools": "https://business.stlucie.k12.fl.us/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Sumter County School District": "https://www.sumter.k12.fl.us/non-instructional-job-descriptions",
+    "Suwannee County School District": "https://www.applitrack.com/suwannee/onlineapp/default.aspx?all=1",
+    "Taylor County School District": "https://www.taylor.k12.fl.us/jobopenings",
+    "Union County School District": "https://unionskyward.nefec.org:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Volusia County Schools": "https://volusia.focusschoolsoftware.com/focus/jobs/#!Jobs",
+    "Wakulla County School District": "https://wcsb.schoolspring.com/",
+    "Walton County School District": "https://ats3.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=WA002771",
+    "Washington County School District": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinwashingtoncoflpaec/rappljoblst484.w?hqrbgrtid=84565"
+};
+
+// Normalization function (Identical to IL/PA)
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/school district/g, "")
+              .replace(/community consolidated/g, "")
+              .replace(/community unit/g, "")
+              .replace(/township/g, "")
+              .replace(/sd/g, "")
+              .replace(/cusd/g, "")
+              .replace(/public schools/g, "")
+              .replace(/district schools/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Boundaries (Florida is '12')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='12'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'Florida'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
