@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wisconsin School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Wisconsin School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+var map = L.map('map').setView([43.5, -88.5], 8);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Big Foot Union High School District": "http://wecan.waspa.org/District/big-foot-area-schools",
+    "Greenfield School District": "http://wecan.waspa.org/District/greenfield",
+    "Arrowhead UHS School District": "https://wecan.waspa.org/District/arrowhead-union-high-school",
+    "Beaver Dam Unified School District": "https://wecan.waspa.org/District/beaver-dam-unified",
+    "Brighton School District 1": "https://wecan.waspa.org/District/brighton-1",
+    "Bristol School District 1": "https://wecan.waspa.org/District/bristol-1",
+    "Brown Deer School District": "https://wecan.waspa.org/District/brown-deer",
+    "Burlington Area School District": "https://wecan.waspa.org/District/burlington-area",
+    "Cambridge School District": "https://wecan.waspa.org/District/cambridge",
+    "Cedarburg School District": "https://wecan.waspa.org/District/cedarburg",
+    "Cudahy School District": "https://wecan.waspa.org/District/cudahy",
+    "Delavan-Darien School District": "https://wecan.waspa.org/District/delavan-darien",
+    "Dodgeland School District": "https://wecan.waspa.org/District/dodgeland",
+    "Dover #1 School District": "https://wecan.waspa.org/District/dover-1-kansasville",
+    "East Troy Community School District": "https://wecan.waspa.org/District/east-troy-community",
+    "Elkhorn Area School District": "https://wecan.waspa.org/District/elkhorn-area",
+    "Elmbrook School District": "https://wecan.waspa.org/District/elmbrook-schools",
+    "Erin School District": "https://wecan.waspa.org/District/erin",
+    "Fort Atkinson School District": "https://wecan.waspa.org/District/fort-atkinson",
+    "Franklin Public School District": "https://wecan.waspa.org/District/franklin-public-schools",
+    "Geneva Joint No. 4 School District": "https://wecan.waspa.org/District/geneva-joint-4-woods-school",
+    "Genoa City Joint No. 2 School District": "https://wecan.waspa.org/District/genoa-city-jt-2",
+    "Germantown School District": "https://wecan.waspa.org/District/germantown",
+    "Glendale-River Hills School District": "https://wecan.waspa.org/District/glendale-river-hills",
+    "Grafton School District": "https://wecan.waspa.org/District/grafton",
+    "Greendale School District": "https://wecan.waspa.org/District/greendale",
+    "Hamilton School District": "https://wecan.waspa.org/District/hamilton",
+    "Hartford J1 School District": "https://wecan.waspa.org/District/hartford-j1",
+    "Hartford UHS School District": "https://wecan.waspa.org/District/hartford-union-high",
+    "Hartland-Lakeside J3 School District": "https://wecan.waspa.org/District/hartland-lakeside",
+    "Herman-Neosho-Rubicon School District": "https://wecan.waspa.org/District/herman-neosho-rubicon",
+    "Holy Hill Area School District": "https://wecan.waspa.org/District/holy-hill-area",
+    "Horicon School District": "https://wecan.waspa.org/District/horicon",
+    "Hustisford School District": "https://wecan.waspa.org/District/hustisford",
+    "School District of Jefferson": "https://wecan.waspa.org/District/jefferson",
+    "Johnson Creek School District": "https://wecan.waspa.org/District/johnson-creek",
+    "Kettle Moraine School District": "https://wecan.waspa.org/District/kettle-moraine",
+    "Kewaskum School District": "https://wecan.waspa.org/District/kewaskum",
+    "Lake Country School District": "https://wecan.waspa.org/District/lake-country",
+    "Lake Geneva Joint No. 1 School District": "https://wecan.waspa.org/District/lake-geneva-schools",
+    "Lake Mills Area School District": "https://wecan.waspa.org/District/lake-mills-area",
+    "Linn Joint No. 4 School District": "https://wecan.waspa.org/District/linn-j4-traver-school",
+    "Lomira School District": "https://wecan.waspa.org/District/lomira",
+    "Maple Dale-Indian Hill School District": "https://wecan.waspa.org/District/maple-dale-indian-hill",
+    "Mayville School District": "https://wecan.waspa.org/District/mayville-schools",
+    "Menomonee Falls School District": "https://wecan.waspa.org/District/menomonee-falls",
+    "Mequon-Thiensville School District": "https://wecan.waspa.org/District/mequon-thiensville",
+    "Merton Community School District": "https://wecan.waspa.org/District/merton-community",
+    "Milwaukee Public Schools": "https://wecan.waspa.org/District/milwaukee-public-schools",
+    "Mukwonago School District": "https://wecan.waspa.org/District/mukwonago-area",
+    "Muskego-Norway School District": "https://wecan.waspa.org/District/muskego-norway",
+    "New Berlin School District": "https://wecan.waspa.org/District/new-berlin",
+    "Nicolet Union High School District": "https://wecan.waspa.org/District/nicolet",
+    "Norris School District": "https://wecan.waspa.org/District/norris",
+    "North Cape School District": "https://wecan.waspa.org/District/north-cape",
+    "North Lake School District": "https://wecan.waspa.org/District/north-lake",
+    "Northern Ozaukee School District": "https://wecan.waspa.org/District/northern-ozaukee",
+    "Norway J7 School District": "https://wecan.waspa.org/District/norway-j7-drought-school",
+    "Oak Creek-Franklin Joint School District": "https://wecan.waspa.org/District/oak-creek-franklin-joint",
+    "Oconomowoc Area School District": "https://wecan.waspa.org/District/oconomowoc-area",
+    "Palmyra-Eagle Area School District": "https://wecan.waspa.org/District/palmyra-eagle-area",
+    "Paris Joint No. 1 School District": "https://wecan.waspa.org/District/paris-j1",
+    "Pewaukee School District": "https://wecan.waspa.org/District/pewaukee",
+    "Port Washington-Saukville School District": "https://wecan.waspa.org/District/port-washington-saukville",
+    "Racine Unified School District": "https://wecan.waspa.org/District/racine-unified",
+    "Randall Joint No. 1 School District": "https://wecan.waspa.org/District/randall-consolidated-joint-district-1",
+    "Randolph School District": "https://wecan.waspa.org/District/randolph",
+    "Raymond #14 School District": "https://wecan.waspa.org/District/raymond-14",
+    "Richmond School District": "https://wecan.waspa.org/District/richmond-school",
+    "Salem School District": "https://wecan.waspa.org/District/salem",
+    "Shorewood School District": "https://wecan.waspa.org/District/shorewood",
+    "Silver Lake Joint No. 1 School District": "https://wecan.waspa.org/District/silver-lake-j1",
+    "Slinger School District": "https://wecan.waspa.org/District/slinger",
+    "South Milwaukee School District": "https://wecan.waspa.org/District/south-milwaukee",
+    "Saint Francis School District": "https://wecan.waspa.org/District/st-francis",
+    "Stone Bank School District": "https://wecan.waspa.org/District/stone-bank",
+    "Swallow School District": "https://wecan.waspa.org/District/swallow",
+    "Trevor-Wilmot Consolidated School District": "https://wecan.waspa.org/District/trevor-wilmot-consolidated-grade",
+    "Twin Lakes #4 School District": "https://wecan.waspa.org/District/twin-lakes-4",
+    "Union Grove J1 School District": "https://wecan.waspa.org/District/union-grove-elementary-school-j1",
+    "Union Grove UHS School District": "https://wecan.waspa.org/District/union-grove-union-high-school",
+    "Walworth Joint No. 1 School District": "https://wecan.waspa.org/District/walworth-county-lakeland-school",
+    "Washington-Caldwell School District": "https://wecan.waspa.org/District/washington-caldwell",
+    "Waterford Graded J1 School District": "https://wecan.waspa.org/District/waterford-graded",
+    "Waterford UHS School District": "https://wecan.waspa.org/District/waterford-union-high-school",
+    "Waterloo School District": "https://wecan.waspa.org/District/waterloo",
+    "Watertown Unified School District": "https://wecan.waspa.org/District/watertown-unified",
+    "Waukesha School District": "https://wecan.waspa.org/District/waukesha",
+    "Waupun School District": "https://wecan.waspa.org/District/waupun-area",
+    "Wauwatosa School District": "https://wecan.waspa.org/District/wauwatosa",
+    "West Allis-West Milwaukee School District": "https://wecan.waspa.org/District/west-allis-west-milwaukee",
+    "West Bend School District": "https://wecan.waspa.org/District/west-bend",
+    "Central High School District of Westosha": "https://wecan.waspa.org/District/westosha-central-high-school",
+    "Wheatland Joint No. 1 School District": "https://wecan.waspa.org/District/wheatland-j1",
+    "Whitefish Bay School District": "https://wecan.waspa.org/District/whitefish-bay",
+    "Whitewater Unified School District": "https://wecan.waspa.org/District/whitewater-unified",
+    "Whitnall School District": "https://wecan.waspa.org/District/whitnall",
+    "Williams Bay School District": "https://wecan.waspa.org/District/williams-bay",
+    "Yorkville J2 School District": "https://wecan.waspa.org/District/yorkville-jt-2",
+    "Kenosha Unified School District": "https://wecan.waspa.org/Employer/Vacancy/All/3201?type=certified",
+    "Wilmot Union High School District": "https://wecan.waspa.org/Employer/Vacancy/PublicCertified/3278"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    let n = str.toLowerCase()
+              .replace(/school district of/g, "")
+              .replace(/school district/g, "")
+              .replace(/public schools/g, "")
+              .replace(/unified/g, "")
+              .replace(/area/g, "")
+              .replace(/community/g, "")
+              .replace(/union high/g, "")
+              .replace(/uhs/g, "")
+              .replace(/joint no/g, "")
+              .replace(/joint/g, "")
+              .replace(/jt/g, "")
+              .replace(/#/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+              
+    // Manual mapping for common variations
+    if (n === "westallislw") return "westalliswestmilwaukee";
+    if (n === "saintfrancis") return "stfrancis";
+    return n;
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Wisconsin Boundaries (STATEFP='55')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='55'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'Wisconsin'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
