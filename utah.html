@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Utah School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Utah School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+var map = L.map('map').setView([39.3, -111.5], 7);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Alpine School District": "https://www.applitrack.com/alpineschools/onlineapp/default.aspx?all=1",
+    "Beaver School District": "https://docs.google.com/spreadsheets/d/1i31Mb2A0ky10Cg3F0PCLF13r8-pxXHUp0ICc9qq25r4/edit?gid=98902636#gid=98902636",
+    "Box Elder School District": "https://www.besd.net/page/esp-jobs",
+    "Cache County School District": "https://jobs.redroverk12.com/org/CCSD",
+    "Canyons School District": "https://www.canyonsdistrict.org/depts/hr/employment/",
+    "Carbon School District": "https://ap1.erplinq.com/carbonschools/search.php",
+    "Daggett School District": "https://www.dsdf.org/o/daggett-sd/page/employment-opportunities",
+    "Davis School District": "https://dsdjobs.net/home",
+    "Duchesne County School District": "https://drive.google.com/drive/folders/0B6iow8X23prYT1JlQWo4QXZ4S2s?resourcekey=0-s2bavu2a_7nvuCjSZzSIHA",
+    "Emery County School District": "https://www.emeryschools.org/employment-opportunities#EmploymentApplications",
+    "Garfield School District": "https://www.garfk12.org/job-openings/",
+    "Grand County School District": "https://www.applitrack.com/grandschools/onlineapp/default.aspx?all=1",
+    "Granite School District": "https://www.applitrack.com/graniteschools/onlineapp/default.aspx?all=1",
+    "Iron County School District": "https://www.applitrack.com/irondistrict/onlineapp/default.aspx?all=1",
+    "Jordan School District": "https://www.applitrack.com/jordandistrict/onlineapp/default.aspx?all=1",
+    "Juab School District": "https://juabschooldistrictut.tylerportico.com/tess/citizen/jobs/job-list/jobs",
+    "Kane School District": "https://kanek12.org/district/employment/",
+    "Logan City School District": "https://jobs.redroverk12.com/org/LoganSchools",
+    "Millard School District": "https://ap1.erplinq.com/millardk12/search.php",
+    "Morgan School District": "https://www.morgansd.org/employement-opprotunities",
+    "Murray City School District": "https://www.murrayschools.org/careers",
+    "Nebo School District": "https://app.hirenimble.com/jobs/nebo",
+    "North Sanpete School District": "https://www.nsanpete.org/employment-opportunities",
+    "North Summit School District": "https://www.nsummit.org/o/nssd/page/north-summit-careers",
+    "Ogden City School District": "https://ogdensd.schoolspring.com/",
+    "Park City School District": "https://pcsd.munisselfservice.com/ess/employmentopportunities/default.aspx",
+    "Piute School District": "https://www.piutek12.org/employees/job-openings.html",
+    "Provo City School District": "https://ap.erplinq.com/provo/search.php",
+    "Rich School District": "https://www.richschool.org/en-US/employment-2dd0a664",
+    "Salt Lake City School District": "https://slcschools.schoolspring.com/",
+    "San Juan School District": "https://www.applitrack.com/sjsd/onlineapp/default.aspx?all=1",
+    "Sevier School District": "https://seviersd.schoolspring.com/",
+    "South Sanpete School District": "https://ssanpete.schoolspring.com/",
+    "South Summit School District": "https://www.ssummit.org/human-resources",
+    "Tintic School District": "https://www.applitrack.com/tintic/onlineapp/default.aspx?all=1",
+    "Tooele County School District": "https://www.applitrack.com/tooele/onlineapp/default.aspx?all=1",
+    "Uintah School District": "https://www.applitrack.com/uintah/onlineapp/default.aspx?all=1",
+    "Wasatch School District": "https://wasatch.edu/employment/",
+    "Washington County School District": "https://www.applitrack.com/washk12/onlineapp/default.aspx?all=1",
+    "Wayne County School District": "https://www.waynesd.org/district/employment-opportunities.html",
+    "Weber School District": "https://wsd.schoolspring.com/#aJobListings"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/city school district/g, "")
+              .replace(/county school district/g, "")
+              .replace(/school district/g, "")
+              .replace(/city schools/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Utah Boundaries (STATEFP='49')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='49'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'Utah'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
