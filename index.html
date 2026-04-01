@@ -70,7 +70,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 // Define active states list
-var activeStates = ["Illinois", "Pennsylvania", "Nevada", "Florida", "Wisconsin"];
+var activeStates = ["Illinois", "Pennsylvania", "Nevada", "Florida", "Wisconsin", "Utah"];
 
 // Load US State Boundaries
 fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json")
@@ -117,7 +117,7 @@ fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geo
         });
 
         // Redirect logic
-        var supportedStates = ["Illinois","Wisconsin","Michigan","Indiana","Missouri","Pennsylvania","Nevada","Florida"];
+        var supportedStates = ["Illinois","Wisconsin","Michigan","Indiana","Missouri","Pennsylvania","Nevada","Florida","Utah"];
         if (supportedStates.includes(stateName)) {
             window.location.href = stateName.toLowerCase() + ".html";
         }
