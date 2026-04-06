@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Texas School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background-color: #f0f0f0; border: 1px solid #ccc; }
+        button:hover { background-color: #e0e0e0; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Texas School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+var map = L.map('map').setView([31.9686, -99.9018], 6);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Aldine ISD": "https://www.applitrack.com/aldineisd/onlineapp/default.aspx?all=1",
+    "Alief ISD": "https://aisd.schoolspring.com/",
+    "Alvin ISD": "https://www.applitrack.com/alvinisd/onlineapp/default.aspx?all=1",
+    "Angleton ISD": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinangletontx/rappljoblst484.w",
+    "Brazos ISD": "https://www.applitrack.com/brazosisd/onlineapp/default.aspx?all=1",
+    "Brazosport ISD": "https://www.applitrack.com/brazosportisd/onlineapp/default.aspx?all=1#",
+    "Channelview ISD": "https://www.applitrack.com/cvisd/onlineapp/default.aspx?all=1",
+    "Clear Creek ISD": "https://clearcreekisd.schoolspring.com/",
+    "Cleveland ISD": "https://www.applitrack.com/clevelandisd/onlineapp/default.aspx?all=1",
+    "Columbia-Brazoria ISD": "https://columbiabrazoria.schoolspring.com/",
+    "Conroe ISD": "https://jobs.conroeisd.net/winocular/workspace/wSpace.exe?Action=wsJobsMain",
+    "Crosby ISD": "https://crosbyisd.schoolspring.com/",
+    "Cypress-Fairbanks ISD": "https://cfisd.schoolspring.com/",
+    "Damon ISD": "https://www.damonisd.net/District/Jobs",
+    "Danbury ISD": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfindanburyisdtx/rapplmnu03.w",
+    "Deer Park ISD": "https://www.applitrack.com/dpisd/onlineapp/default.aspx?all=1",
+    "Dickinson ISD": "https://dickinsonisd.schoolspring.com/",
+    "Fort Bend ISD": "https://aa210.taleo.net/careersection/ex/jobsearch.ftl?lang=en",
+    "Friendswood ISD": "https://skyward.fisdk12.net:444/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w?isPopup=true",
+    "Galena Park ISD": "https://www.applitrack.com/galenaparkisd/onlineapp/default.aspx?all=1",
+    "Galveston ISD": "https://www.applitrack.com/galveston/onlineapp/default.aspx?all=1",
+    "Goose Creek CISD": "https://teams.gccisd.net/submission/EntryPointBrowseJobPostingsAction.do?applicantType=external",
+    "High Island ISD": "https://highislandisd.com/en-US/employment-aae9f44d",
+    "Hitchcock ISD": "https://skyward.iscorp.com/HitchcockISDTXBus/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Houston ISD": "https://apply.houstonisd.org/careers",
+    "Humble ISD": "https://www.applitrack.com/humbleisd/onlineapp/default.aspx?all=1",
+    "Katy ISD": "https://katy.schoolspring.com/",
+    "Klein ISD": "https://www.applitrack.com/kleinisd/onlineapp/default.aspx?all=1",
+    "La Porte ISD": "https://lpisd.schoolspring.com/",
+    "Lamar Consolidated ISD": "https://winoc.lcisd.org/WorkSpace/wSpace.exe?Action=wsJobsMain",
+    "Magnolia ISD": "https://www.applitrack.com/magnoliaisd/onlineapp/default.aspx?all=1",
+    "Montgomery ISD": "https://www.applitrack.com/montgomeryisd/onlineapp/default.aspx?all=1",
+    "Needville ISD": "https://online.skyward.com/NeedvilleTXBus/ApplicantTracking/JobBoard/ViewJobPostings?w=bfd24447c10a40839dc6d11e3298f80a&p=a892a2056a404d349e5a6b84733b1563",
+    "New Caney ISD": "https://www.applitrack.com/newcaneyisd/onlineapp/default.aspx?all=1",
+    "Pasadena ISD": "https://www.applitrack.com/pasadenaisd/onlineapp/default.aspx?all=1",
+    "Pearland ISD": "https://www.applitrack.com/pearlandisd/onlineapp/default.aspx?all=1",
+    "Richards ISD": "https://www.richardsisd.net/apps/jobs/",
+    "Santa Fe ISD": "https://santafe.schoolspring.com/",
+    "Sheldon ISD": "https://www.applitrack.com/sheldonisd/onlineapp/default.aspx?all=1",
+    "Splendora ISD": "https://www.applitrack.com/splendoraisd/onlineapp/default.aspx?all=1",
+    "Spring Branch ISD": "https://online.springbranchisd.com/teamSBISD/opportunities.html",
+    "Spring ISD": "https://springisd.schoolspring.com/",
+    "Stafford Municipal School District": "https://www.applitrack.com/staffordmsd/onlineapp/default.aspx?all=1",
+    "Sweeny ISD": "https://sweenyisd.schoolspring.com/",
+    "Texas City ISD": "https://tcisd.schoolspring.com/",
+    "Tomball ISD": "https://tomball.schoolspring.com/",
+    "Willis ISD": "https://willis.teams.hosting/submission/EntryPointBrowseJobPostingsAction.do?applicantType=external",
+    "Aledo ISD": "https://www.applitrack.com/aledo/onlineapp/default.aspx?all=1",
+    "Allen ISD": "https://apps2.winocular.com/AllenISD/workspace/wSpace.exe?Action=wsJobsMain",
+    "Anna ISD": "https://docs.google.com/document/d/17n2EFpjw9wCiBikFCySB6FpJLPIOilDiyIvCcZdTxzc/edit?tab=t.0",
+    "Argyle ISD": "https://www.applitrack.com/argyleisd/onlineapp/default.aspx?all=1",
+    "Arlington ISD": "https://www.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=WA003038",
+    "Aubrey ISD": "https://aubreyisd.schoolspring.com/",
+    "Azle ISD": "https://sky.azleisd.net/Business/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Birdville ISD": "https://birdvilleschools.schoolspring.com/",
+    "Blue Ridge ISD": "https://app.txedjobnetwork.org/ords/r/vai/recruit-ai-applicants/organization-job-postings?orgref=B9D6AC3ADCED0B84B88E9C986C25D21F",
+    "Burleson ISD": "https://business.burlesonisd.net/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Carroll ISD": "https://www.applitrack.com/carrollisd/onlineapp/default.aspx?all=1",
+    "Castleberry ISD": "https://castleberryisd.schoolspring.com/",
+    "Celina ISD": "https://www.celinaisd.com/join-our-team/career-opportunities",
+    "Community ISD": "https://communityisd.schoolspring.com/",
+    "Coppell ISD": "https://apps2.winocular.com/coppell/workspace/wSpace.exe?Action=wsJobsMain",
+    "Crowley ISD": "https://www.applitrack.com/crowley/onlineapp/default.aspx?all=1",
+    "Dallas ISD": "https://aa142.taleo.net/careersection/ext/jobsearch.ftl",
+    "Denton ISD": "https://dentonisd.schoolspring.com/",
+    "DeSoto ISD": "https://desoto.teams.hosting/submission/EntryPointBrowseJobPostingsAction.do?applicantType=external",
+    "Duncanville ISD": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinduncanvilletx/rappljoblst484.w?hqrbgrtid=165162",
+    "Eagle Mountain-Saginaw ISD": "https://web1.ems-isd.net/scripts/wsisa.dll/WService=wsFin/rapplmnu03.w",
+    "Everman ISD": "https://www.applitrack.com/everman/onlineapp/default.aspx?all=1",
+    "Farmers Branch ISD": "https://www.applitrack.com/cfbisd/onlineapp/default.aspx?all=1",
+    "Farmersville ISD": "https://app.txedjobnetwork.org/ords/r/vai/recruit-ai-applicants/organization-job-postings?orgref=0BA931B643EACE97DACFE9E84821D550",
+    "Ferris ISD": "https://www.applitrack.com/ferrisisd/onlineapp/default.aspx?all=1",
+    "Forney ISD": "https://www.applitrack.com/forneyisd/onlineapp/default.aspx?all=1",
+    "Fort Worth ISD": "https://www.applitrack.com/fortworth/onlineapp/default.aspx?all=1",
+    "Frisco ISD": "https://www.friscoisd.org/employment/current-openings",
+    "Garland ISD": "https://www.applitrack.com/garlandisd/onlineapp/default.aspx?all=1",
+    "Godley ISD": "https://skyward.iscorp.com/GodleyISDTXSky/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Grapevine-Colleyville ISD": "https://grapevinecolleyville.schoolspring.com/",
+    "Grand Prairie ISD": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfingrandprairietx/rappljoblst484.w",
+    "Highland Park ISD": "https://app.txedjobnetwork.org/ords/r/vai/recruit-ai-applicants/organization-job-postings?orgref=C2E02AC28434EC4280AE35217DD06672",
+    "Hurst-Euless-Bedford ISD": "https://www.atenterprise.powerschool.com/ats/app_login?COMPANY_ID=00009803",
+    "Irving ISD": "https://irvingisd.schoolspring.com/",
+    "Keller ISD": "https://kellerisd.schoolspring.com/",
+    "Kennedale ISD": "https://kennedaleisd.schoolspring.com/",
+    "Lake Dallas ISD": "https://ldisd.schoolspring.com/",
+    "Lake Worth ISD": "https://lwisd.schoolspring.com/",
+    "Lancaster ISD": "https://www.applitrack.com/lancasterisd/onlineapp/default.aspx?all=1",
+    "Lewisville ISD": "https://www.applitrack.com/lewisvilleisd/onlineapp/default.aspx?all=1",
+    "Little Elm ISD": "https://littleelmisd.schoolspring.com/",
+    "Lovejoy ISD": "https://www.applitrack.com/lovejoy/onlineapp/default.aspx?all=1",
+    "Mansfield ISD": "https://skyward-mansfield.iscorp.com/scripts/wsisa.dll/WService=wsfinmansfieldtx/rappljoblst484.ww",
+    "McKinney ISD": "https://skyward.iscorp.com/McKinneyISDTXBus/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Melissa ISD": "https://www.applitrack.com/melissaisd/onlineapp/default.aspx?all=1",
+    "Mesquite ISD": "https://www.applitrack.com/MesquiteISD/onlineapp/default.aspx?all=1",
+    "Northwest ISD": "https://nisdtx.schoolspring.com/",
+    "Plano ISD": "https://www.applitrack.com/pisd/onlineapp/default.aspx?all=1",
+    "Princeton ISD": "https://princetonisd.schoolspring.com/",
+    "Prosper ISD": "https://prosperisd.schoolspring.com/",
+    "Richardson ISD": "https://www.applitrack.com/risd/onlineapp/default.aspx?all=1",
+    "Rockwall ISD": "https://skyfin.rockwallisd.org/scripts/cgiip.exe/WService=wsFin/rapplmnu03.r",
+    "Royse City ISD": "https://www.applitrack.com/rcisd/onlineapp/default.aspx?all=1",
+    "Sanger ISD": "https://www.applitrack.com/sangerisd/onlineapp/default.aspx?all=1",
+    "Sunnyvale ISD": "https://www.applitrack.com/sunnyvaleisd/onlineapp/default.aspx?all=1",
+    "White Settlement ISD": "https://wsisd.schoolspring.com/",
+    "Wylie ISD": "https://skyward.wylieisd.net/Business/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Alamo Heights ISD": "https://winoc.ahisd.net/jobpost/JobPost.exe?Action=page1&ini=jobs",
+    "Boerne ISD": "https://boerneisd.schoolspring.com/",
+    "Comal ISD": "https://comal.schoolspring.com/#aJobListings",
+    "East Central ISD": "https://www.applitrack.com/eastcentral/onlineapp/default.aspx?all=1",
+    "Edgewood ISD": "https://www.applitrack.com/eisd/onlineapp/default.aspx?all=1",
+    "Floresville ISD": "https://fisd.schoolspring.com/",
+    "Fort Sam Houston ISD": "https://www.applitrack.com/fshisd/onlineapp/default.aspx?all=1",
+    "Harlandale ISD": "https://harlandale.schoolspring.com/",
+    "Judson ISD": "https://judsonisd.schoolspring.com/",
+    "Lackland ISD": "https://www.applitrack.com/lacklandisd/onlineapp/default.aspx?all=1",
+    "Marion ISD": "https://www.applitrack.com/marionisd/onlineapp/default.aspx?all=1",
+    "Medina Valley ISD": "https://skyward.iscorp.com/MedinaValleyTXBus/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Navarro ISD": "https://www.applitrack.com/nisd/onlineapp/default.aspx?all=1",
+    "New Braunfels ISD": "https://newbraunfels.schoolspring.com/",
+    "North East ISD": "https://lmkwebextprod.neisd.net:444/ltmprod/CandidateSelfService/controller.servlet?context.dataarea=ltmprod&context.session.key.HROrganization=199&context.session.key.JobBoard=EXTERNAL&context.session.key.noheader=true#",
+    "Northside ISD": "https://ess.nisd.net/ess/employmentopportunities/default.aspx",
+    "Randolph Field ISD": "https://www.applitrack.com/rfisd/onlineapp/default.aspx?all=1",
+    "San Antonio ISD": "https://www.applitrack.com/saisd/onlineapp/default.aspx?all=1",
+    "Schertz-Cibolo-Universal City ISD": "https://www.applitrack.com/scuctxed/onlineapp/default.aspx?all=1",
+    "Seguin ISD": "https://www.applitrack.com/SeguinISD/onlineapp/default.aspx?all=1",
+    "Somerset ISD": "https://skyward.sisdk12.net/scripts/cgiip.exe/WService=wsFin/RAPPLMNU03.W",
+    "South San Antonio ISD": "https://sanantonio.schoolspring.com/",
+    "Southside ISD": "https://southsideisd.schoolspring.com/",
+    "Southwest ISD": "https://www.applitrack.com/swisd/onlineapp/default.aspx?all=1",
+    "La Vernia ISD": "https://lavernia.schoolspring.com/",
+    "Poth ISD": "https://jobs.redroverk12.com/org/pothisd",
+    "Stockdale ISD": "https://stockdale.schoolspring.com/"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/isd/g, "")
+              .replace(/cisd/g, "")
+              .replace(/consolidated/g, "")
+              .replace(/independent school district/g, "")
+              .replace(/school district/g, "")
+              .replace(/municipal school district/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Texas Boundaries (STATEFP='48')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='48'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'Texas'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
