@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>California School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background-color: #f0f0f0; border: 1px solid #ccc; }
+        button:hover { background-color: #e0e0e0; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>California School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+var map = L.map('map').setView([36.7783, -119.4179], 6);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "ABC Unified": "https://www.edjoin.org/abcusd",
+    "Alhambra Unified": "https://www.edjoin.org/alhambrausd",
+    "Arcadia Unified": "https://www.edjoin.org/Home/Jobs?keywords=arcadia%20unified%20school%20district&searchType=all",
+    "Azusa Unified": "https://www.edjoin.org/azusausd",
+    "Baldwin Park Unified": "https://www.edjoin.org/bpusd",
+    "Bellflower Unified": "https://www.edjoin.org/BellflowerUnified",
+    "Beverly Hills Unified": "https://www.edjoin.org/bhusd",
+    "Burbank Unified": "https://www.edjoin.org/burbankusd",
+    "Charter Oak Unified": "https://www.edjoin.org/charteroak",
+    "Claremont Unified": "https://www.edjoin.org/ClaremontUnified",
+    "Compton Unified": "https://www.edjoin.org/CUSD",
+    "Covina-Valley Unified": "https://www.edjoin.org/cvusdk12",
+    "Culver City Unified": "https://www.edjoin.org/ccusd",
+    "Downey Unified": "https://www.edjoin.org/DowneyUnified",
+    "Duarte Unified": "https://www.edjoin.org/duarteusd",
+    "El Rancho Unified": "https://www.edjoin.org/erusd",
+    "Glendale Unified": "https://www.edjoin.org/glendaleusd",
+    "Glendora Unified": "https://www.edjoin.org/GlendoraUSD",
+    "Hacienda La Puente Unified": "https://www.edjoin.org/hlp",
+    "Inglewood Unified": "https://www.edjoin.org/inglewood",
+    "La Cañada Unified": "https://www.edjoin.org/lcusd",
+    "Lancaster Elementary": "https://www.edjoin.org/lsd",
+    "Long Beach Unified": "https://www.edjoin.org/lbschools",
+    "Los Angeles Unified": "https://careers.lausd.org/viewalljobs/",
+    "Lynwood Unified": "https://www.mylusd.org/departments/human-resources/job-opportunities",
+    "Monrovia Unified": "https://www.edjoin.org/monroviaschools",
+    "Montebello Unified": "https://www.edjoin.org/montebello",
+    "Norwalk-La Mirada Unified": "https://www.edjoin.org/nlmusd#",
+    "Palmdale Elementary": "https://www.palmdalesd.org/apps/pages/alljobs",
+    "Palos Verdes Peninsula Unified": "https://www.edjoin.org/pvpusd",
+    "Paramount Unified": "https://www.edjoin.org/paramountusd?rows=10&page=1&catID=0&districtID=310",
+    "Pasadena Unified": "https://www.edjoin.org/pasadenaunified?rows=50&page=1&catID=0&districtID=311",
+    "Pomona Unified": "https://www.edjoin.org/PUSD",
+    "Redondo Beach Unified": "https://www.edjoin.org/rbusd",
+    "San Marino Unified": "https://www.edjoin.org/SanMarinoUnified",
+    "Santa Monica-Malibu Unified": "https://www.edjoin.org/smmusd",
+    "South Pasadena Unified": "https://www.edjoin.org/spusd",
+    "Temple City Unified": "https://www.edjoin.org/tcusd",
+    "Torrance Unified": "https://www.tusd.org/employment",
+    "West Covina Unified": "https://www.edjoin.org/wcusd",
+    "Bonsall Unified": "https://www.edjoin.org/BonsallUSD",
+    "Borrego Springs Unified": "https://www.edjoin.org/bsusd",
+    "Cajon Valley Union Elementary": "https://www.edjoin.org/cajonvalley",
+    "Carlsbad Unified": "https://www.edjoin.org/carlsbadusd",
+    "Chula Vista Elementary": "https://www.edjoin.org/chulavista",
+    "Coronado Unified": "https://www.edjoin.org/coronadousd",
+    "Dehesa Elementary": "https://www.edjoin.org/Dehesaesd",
+    "Escondido Union Elementary": "https://www.edjoin.org/EUSDWorkforUs",
+    "Fallbrook Union Elementary": "https://www.edjoin.org/fuesd",
+    "Grossmont Union High": "https://www.edjoin.org/GUHSD",
+    "Jamul-Dulzura Union Elementary": "https://www.edjoin.org/jdusd",
+    "La Mesa-Spring Valley": "https://www.lmsvschools.org/employment/",
+    "Lakeside Union Elementary": "https://www.edjoin.org/lsusd",
+    "Lemon Grove Elementary": "https://lgsd.schoolspring.com/",
+    "Mountain Empire Unified": "https://www.edjoin.org/meusd",
+    "National Elementary": "https://www.edjoin.org/nsd",
+    "Oceanside Unified": "https://www.edjoin.org/oside",
+    "Poway Unified": "https://www.edjoin.org/pusdjobs",
+    "Ramona Unified": "https://www.edjoin.org/ramonausd",
+    "Rancho Santa Fe Elementary": "https://www.edjoin.org/rsf",
+    "San Diego Unified": "https://sandiegounified.schoolspring.com/",
+    "San Dieguito Union High": "https://sduhsd.schoolspring.com/",
+    "San Marcos Unified": "https://www.edjoin.org/smusd",
+    "San Ysidro Elementary": "https://www.edjoin.org/sysd",
+    "Santee Elementary": "https://www.edjoin.org/santeesd",
+    "Solana Beach Elementary": "https://www.edjoin.org/SolanaBeach",
+    "South Bay Union": "https://www.applitrack.com/sbusd/onlineapp/default.aspx?all=1",
+    "Sweetwater Union High": "https://www.edjoin.org/suhsd",
+    "Valley Center-Pauma Unified": "https://www.edjoin.org/vcpusd",
+    "Vista Unified": "https://www.edjoin.org/vistausd",
+    "Center Joint Unified": "https://www.edjoin.org/cjusd",
+    "Davis Joint Unified": "https://www.edjoin.org/djusd",
+    "Dry Creek Joint Elementary": "https://www.edjoin.org/drycreekschools",
+    "El Dorado Union High": "https://www.edjoin.org/EDUHSD",
+    "Elk Grove Unified": "https://www.edjoin.org/egusd",
+    "Eureka Union Elementary": "https://www.edjoin.org/eurekausd",
+    "Folsom-Cordova Unified": "https://www.edjoin.org/fcusd",
+    "Galt Joint Union Elementary": "https://www.edjoin.org/galtk12",
+    "Galt Joint Union High": "https://www.edjoin.org/ghsd",
+    "Gateway Community Charters": "https://www.edjoin.org/gatewaycommunitycharters",
+    "Natomas Unified": "https://www.edjoin.org/natomasunified",
+    "Newcastle Elementary": "https://www.edjoin.org/newcastlek12",
+    "Placer Union High": "https://www.edjoin.org/puhsd",
+    "Rescue Union Elementary": "https://www.edjoin.org/rescueusd",
+    "Rocklin Unified": "https://www.edjoin.org/rocklinusd",
+    "Roseville City Elementary": "https://www.edjoin.org/rcsdk8",
+    "Roseville Joint Union High": "https://www.edjoin.org/RJUHSD",
+    "Sacramento City Unified": "https://edjoin.org/scusd",
+    "San Juan Unified": "https://www.applitrack.com/sanjuan/onlineapp/default.aspx?all=1",
+    "St. Hope Public Schools": "https://www.edjoin.org/sthopepublicschools",
+    "Tahoe-Truckee Unified": "https://www.edjoin.org/ttusd",
+    "Twin Rivers Unified": "https://www.edjoin.org/twinriversusd",
+    "Washington Unified": "https://www.edjoin.org/wusdk12",
+    "Western Placer Unified": "https://www.edjoin.org/wpusd",
+    "Wheatland Elementary": "https://www.edjoin.org/wsd",
+    "Wheatland Union High": "https://www.edjoin.org/wheatlanduhs",
+    "Winters Joint Unified": "https://www.edjoin.org/WintersJUSD",
+    "Woodland Joint Unified": "https://www.edjoin.org/wjusd",
+    "Yolo County Office of Education": "https://www.edjoin.org/ycoe",
+    "Sutter County Superintendent": "https://edjoin.org/sutterk12"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/unified/g, "")
+              .replace(/joint unified/g, "")
+              .replace(/elementary/g, "")
+              .replace(/union elementary/g, "")
+              .replace(/union high/g, "")
+              .replace(/city school district/g, "")
+              .replace(/school district/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch California Boundaries (STATEFP='06')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='06'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'California'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
