@@ -102,7 +102,7 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             var name = feature.properties.NAME;
             var hasMatch = lookup.hasOwnProperty(normalize(name));
             return {
-                fillColor: hasMatch ? "#2ecc71" : "#e6e6e6", // EXACT IL COLORS
+                fillColor: hasMatch ? "#2ecc71" : "#e6e6e6",
                 color: "#555555",
                 weight: 1,
                 fillOpacity: 0.6
@@ -126,11 +126,27 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
                 },
                 click: function() {
                     if (link) {
+
+                        var opened = false;
+
                         gtag('event', 'click_district', { 
                             'district_full_name': finalDisplayName, 
-                            'state': 'Nevada' 
+                            'state': 'Nevada',
+                            'event_callback': function() {
+                                if (!opened) {
+                                    opened = true;
+                                    window.open(link, '_blank');
+                                }
+                            }
                         });
-                        window.open(link, '_blank');
+
+                        // fallback in case GA blocks callback
+                        setTimeout(function(){
+                            if (!opened) {
+                                opened = true;
+                                window.open(link, '_blank');
+                            }
+                        }, 800);
                     }
                 }
             });
