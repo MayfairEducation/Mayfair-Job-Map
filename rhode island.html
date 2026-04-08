@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rhode Island School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background-color: #f0f0f0; border: 1px solid #ccc; }
+        button:hover { background-color: #e0e0e0; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>Rhode Island School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+var map = L.map('map').setView([41.6, -71.5], 10);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Barrington Public Schools": "https://employer.schoolspring.com/jobs/?employer=11369",
+    "Bristol Warren Regional School District": "https://employer.schoolspring.com/jobs/?iframe=1&employer=10613&color=006600&font=verdana",
+    "Burrillville Public Schools": "https://www.bsd-ri.net/about-us/employment",
+    "Central Falls School District": "https://www.cfschools.net/page/employment",
+    "Chariho Regional School District": "https://www.chariho.k12.ri.us/central_administration/human_resources/available_positions",
+    "Coventry Public Schools": "https://employer.schoolspring.com/jobs/?employer=11139",
+    "Cranston Public Schools": "https://cpsed.schoolspring.com/",
+    "Cumberland Public Schools": "https://employer.schoolspring.com/jobs/?employer=11159",
+    "East Greenwich Public Schools": "https://www.egsd.net/departments/human-resources/employment-opportunities",
+    "East Providence City Schools": "https://epschoolsri.org/openings/",
+    "Exeter-West Greenwich Regional School District": "https://employer.schoolspring.com/jobs/index.cfm?iframe=1&amp&employer=11201",
+    "Foster Elementary School District": "https://www.fg.k12.ri.us/employment/job_opportunities",
+    "Foster-Glocester Regional Schools": "https://www.fg.k12.ri.us/employment/job_opportunities",
+    "Glocester Elementary School District": "https://www.fg.k12.ri.us/employment/job_opportunities",
+    "Jamestown School District": "https://www.jamestownschools.org/apps/pages/index.jsp?uREC_ID=2282906&type=d&pREC_ID=2200377",
+    "Johnston Public Schools": "https://employer.schoolspring.com/jobs/?employer=12055",
+    "Lincoln Public Schools": "https://www.lincolnps.org/departments/human-resources",
+    "Little Compton Public Schools": "https://lcsd.k12.ri.us/hr",
+    "Middletown Public Schools": "https://www.mpsri.net/page/employment-opportunities",
+    "Narragansett School System": "https://www.nssk12.org/employment/employment_opportunities",
+    "New Shoreham School District": "https://www.bischool.net/page/human-resources",
+    "Newport Public Schools": "https://www.npsri.net/page/employment-opportunities",
+    "North Kingstown School Department": "https://nksd.schoolspring.com/",
+    "North Providence Public Schools": "https://nprovschools.org/employment",
+    "North Smithfield Public Schools": "https://www.nsps.us/employment.html",
+    "Pawtucket Public Schools": "https://www.applitrack.com/psdri/onlineapp/default.aspx?all=1",
+    "Portsmouth School Department": "https://www.portsmouthschoolsri.org/page/employment-opportunities",
+    "Providence Public Schools": "https://providenceschools.schoolspring.com/",
+    "Scituate Public Schools": "https://www.scituateschoolsri.net/page/employment-opportunities",
+    "Smithfield Public Schools": "https://employer.schoolspring.com/jobs/index.cfm?iframe=1&amp&employer=11142",
+    "South Kingstown School District": "https://www.skschools.net/our_district/employment_opportunities",
+    "Tiverton Public Schools": "https://employer.schoolspring.com/jobs/?iframe=1&employer=11875",
+    "Warwick Public Schools": "https://warwickschools.schoolspring.com/",
+    "West Warwick Public Schools": "https://employer.schoolspring.com/jobs/?employer=10762",
+    "Westerly Public Schools": "https://westerly.schoolspring.com/",
+    "Woonsocket Education Department": "https://www.woonsocketschools.com/office-of-human-resources-and-labor-relations.html"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/public schools/g, "")
+              .replace(/regional school district/g, "")
+              .replace(/regional schools/g, "")
+              .replace(/city schools/g, "")
+              .replace(/school district/g, "")
+              .replace(/school system/g, "")
+              .replace(/school department/g, "")
+              .replace(/education department/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch Rhode Island Boundaries (STATEFP='44')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='44'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'Rhode Island'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
