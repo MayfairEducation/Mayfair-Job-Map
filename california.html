@@ -203,13 +203,29 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
                 mouseout: function(e) { 
                     geojsonLayer.resetStyle(e.target); 
                 },
-                click: function(e) {
+                click: function() {
                     if (link) {
+                        var opened = false;
+
+                        // Unified tracking parameter: district_full_name
                         gtag('event', 'click_district', {
-                            'district_name': name,
-                            'state': 'California'
+                            'district_full_name': name,
+                            'state': 'California',
+                            'event_callback': function() {
+                                if (!opened) {
+                                    opened = true;
+                                    window.open(link, '_blank');
+                                }
+                            }
                         });
-                        window.open(link, '_blank');
+
+                        // 800ms fallback in case the gtag callback fails to fire
+                        setTimeout(function(){
+                            if (!opened) {
+                                opened = true;
+                                window.open(link, '_blank');
+                            }
+                        }, 800);
                     }
                 }
             });
