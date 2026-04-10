@@ -86,12 +86,11 @@ var geocoder = L.Control.geocoder({
     collapsed: isMobile
 }).on('markgeocode', function(e) { map.fitBounds(e.geocode.bbox); }).addTo(map);
 
-// Set names to "X County" instead of "X District"
+// Strictly DELETES the ending phrases
 function cleanName(name) {
-    return name.replace(/School District/gi, "County")
-               .replace(/Public Schools/gi, "County")
-               .replace(/Community Unit/gi, "County")
-               .replace(/County County/gi, "County") // Prevent double "County"
+    return name.replace(/School District/gi, "")
+               .replace(/Public Schools/gi, "")
+               .replace(/Community Unit/gi, "")
                .trim();
 }
 
@@ -142,7 +141,6 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             if (isMobile) {
                 layer.bindTooltip(display, { permanent: true, direction: 'center', className: 'district-label' });
             } else {
-                // Desktop: Hover sticky tooltip
                 layer.bindTooltip("<b>" + display + "</b>" + (link ? "<br>Click to view jobs" : ""), { sticky: true });
             }
 
@@ -156,7 +154,7 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
 
     function updateLabelVisibility() {
         var zoom = map.getZoom();
-        var threshold = isMobile ? 8 : 10; 
+        var threshold = isMobile ? 8 : 11; // Ensure desktop doesn't show them unless super close
         var labels = document.querySelectorAll('.district-label');
         labels.forEach(l => {
             if (zoom >= threshold) {
