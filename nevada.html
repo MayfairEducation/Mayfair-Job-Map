@@ -25,6 +25,19 @@
         #feedback-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; border: 1px solid #eee; }
         #feedback-input { border: none; outline: none; width: 220px; font-size: 14px; padding: 5px; background: transparent; }
         #feedback-submit { display: none; background: #4285F4; color: white; border: none; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; }
+
+        /* Dynamic District Labels */
+        .district-label {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            font-weight: bold;
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+            pointer-events: none;
+            font-size: 12px;
+            display: none; /* Hidden by default, controlled by JS */
+        }
     </style>
 </head>
 <body>
@@ -43,7 +56,6 @@
           onsubmit="submitted=true;">
         
         <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Submit questions and feedback..." required>
-        
         <input type="hidden" name="entry.SOME_OTHER_ID" value="Nevada"> 
 
         <button type="submit" id="feedback-submit">Send</button>
@@ -55,14 +67,13 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-// Nevada View
 var map = L.map('map').setView([38.5, -117.0], 6);
+var submitted = false;
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Search
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
     placeholder: "Search Zip or Address...",
@@ -73,7 +84,6 @@ var geocoder = L.Control.geocoder({
 })
 .addTo(map);
 
-// District Links
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -104,7 +114,6 @@ for (var fullName in jobLinks) {
     lookup[normalize(fullName)] = { displayName: fullName, link: jobLinks[fullName] };
 }
 
-// Fetch State Data
 fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='32'&outFields=NAME,GEOID&f=geojson")
 .then(res => res.json())
 .then(data => {
@@ -124,7 +133,15 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             var finalDisplayName = match ? match.displayName : rawName;
             var link = match ? match.link : null;
 
-            layer.bindTooltip("<b>" + finalDisplayName + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+            // Permanent label (starts hidden via CSS)
+            layer.bindTooltip(finalDisplayName, {
+                permanent: true,
+                direction: 'center',
+                className: 'district-label'
+            });
+
+            // Hover Tooltip (Jobs)
+            layer.bindPopup("<b>" + finalDisplayName + "</b>" + (link ? "<br><a href='" + link + "' target='_blank'>View Job Portal</a>" : ""));
 
             layer.on({
                 mouseover: function(e) { e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); },
@@ -138,10 +155,18 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             });
         }
     }).addTo(map);
+
+    // Label Visibility Control
+    map.on('zoomend', function() {
+        var zoom = map.getZoom();
+        var labels = document.querySelectorAll('.district-label');
+        labels.forEach(function(label) {
+            label.style.display = (zoom >= 7) ? 'block' : 'none';
+        });
+    });
 });
 
 // Feedback Logic
-var submitted = false;
 const fInput = document.getElementById('feedback-input');
 const fSubmit = document.getElementById('feedback-submit');
 const fForm = document.getElementById('feedback-form');
