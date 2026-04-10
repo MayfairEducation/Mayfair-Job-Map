@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Mexico School Districts Job Map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-41JX7WMDFE');
+    </script>
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        h1 { text-align: center; margin: 20px 0; }
+        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
+        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background-color: #f0f0f0; border: 1px solid #ccc; }
+        button:hover { background-color: #e0e0e0; }
+        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+    </style>
+</head>
+<body>
+
+<h1>New Mexico School Districts Job Search</h1>
+<button onclick="window.location.href='index.html'">Back to US Map</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+var map = L.map('map').setView([34.5199, -105.8701], 7);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: "Search Zip or Address...",
+    collapsed: false 
+})
+.on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    map.fitBounds(bbox);
+})
+.addTo(map);
+
+var jobLinks = {
+    "Alamogordo Public Schools": "https://www.applitrack.com/aps4kids/onlineapp/default.aspx?all=1",
+    "Albuquerque Public Schools": "https://hrd.aps.edu/workspace/wSpace.exe?Action=wsJobsMain",
+    "Animas Public Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=3023000000",
+    "Artesia Public Schools": "https://bulldogs.schoolspring.com/",
+    "Aztec Municipal Schools": "https://aztec.schoolspring.com/",
+    "Belen Consolidated Schools": "https://belen.schoolspring.com/",
+    "Bernalillo Public Schools": "https://bernalillo.schoolspring.com/",
+    "Bloomfield Schools": "https://bloomfieldnm.schoolspring.com/",
+    "Capitan Municipal Schools": "https://www.capitantigers.org/human-resources",
+    "Carlsbad Municipal Schools": "https://www.applitrack.com/carlsbad/onlineapp/default.aspx?all=1",
+    "Carrizozo Municipal Schools": "https://www.carrizozogrizzlies.org/page/employment-opportunities",
+    "Central Consolidated Schools": "https://www.applitrack.com/ccsdnm/onlineapp/default.aspx?all=1",
+    "Chama Valley Independent Schools": "https://www.chamaschools.org/en-US/employment-50d8bd79",
+    "Cimarron Municipal Schools": "https://cimarronschools.schoolspring.com/",
+    "Clayton Municipal Schools": "https://www.claytonschools.us/page/current-openings",
+    "Cloudcroft Municipal Schools": "https://www.cmsbears.org/employment",
+    "Clovis Municipal Schools": "https://cmsskyward.clovis-schools.org/scripts/wsisa.dll/WService=wsSky/rappljoblst484.w",
+    "Cobre Consolidated Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=2417000000",
+    "Corona Municipal Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=3827000000",
+    "Cuba Independent Schools": "https://www.applitrack.com/cubanm/onlineapp/default.aspx?all=1",
+    "Deming Public Schools": "https://deming.schoolspring.com/",
+    "Des Moines Municipal Schools": "https://www.desmoines.k12.nm.us/article/1460582",
+    "Dexter Consolidated Schools": "https://dexterdemons.schoolspring.com/",
+    "Dora Municipal Schools": "https://app.cariina.com/public/workflows/boards/6983c25d2eb07b161e47430e",
+    "Dulce Independent Schools": "https://www.applitrack.com/dulceisd/onlineapp/default.aspx?all=1",
+    "Elida Municipal Schools": "https://www.elidaschools.net/39846",
+    "Española Public Schools": "https://espanola.schoolspring.com/",
+    "Estancia Municipal Schools": "https://www.emsdbears.us/page/careers",
+    "Eunice Public Schools": "https://www.eunice.org/employment/career-opportunities",
+    "Farmington Municipal Schools": "https://www.applitrack.com/fmsk12/onlineapp/default.aspx?all=1",
+    "Floyd Municipal Schools": "https://www.floydbroncos.com/129932_2",
+    "Fort Sumner Municipal Schools": "https://www.ftsumnerk12.com/employment-information",
+    "Gadsden Independent Schools": "https://www.governmentjobs.com/careers/gisd/", 
+    "Gallup-McKinley County Schools": "https://www.applitrack.com/gmcsk12nm/onlineapp/default.aspx?all=1",
+    "Grady Municipal Schools": "https://gradyschool.com/job-openings",
+    "Grants-Cibola County Schools": "https://www.gccs.k12.nm.us/page/human-resources-at-gccs",
+    "Hagerman Municipal Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=505000000",
+    "Hatch Valley Public Schools": "https://www.hatchschools.net/jobs",
+    "Hobbs Municipal Schools": "https://skyward.iscorp.com/HobbsNMBus/ApplicantTracking/JobBoard/ViewJobPostings",
+    "Hondo Valley Public Schools": "https://www.hondoeagles.org/page/human-resources",
+    "House Municipal Schools": "https://www.nmreap.net/schoolinfo.php?XX=NM018837192017",
+    "Jal Public Schools": "https://www.jalnm.org/information/employment_applications",
+    "Jemez Mountain Public Schools": "https://jmsd.tedk12.com/hire/index.aspx",
+    "Jemez Valley Public Schools": "https://jvps.org/job-opportunities",
+    "Lake Arthur Municipal Schools": "https://www.la-panthers.org/human-resources",
+    "Las Cruces Public Schools": "https://www.applitrack.com/lascruces/onlineapp/default.aspx?all=1",
+    "Las Vegas City Public Schools": "https://www.cybercardinal.com/o/lvcs/page/employment-opportunities",
+    "Logan Municipal Schools": "https://www.loganschool.net/job-postings",
+    "Lordsburg Municipal Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=2923000000",
+    "Los Alamos Public Schools": "https://laschools.schoolspring.com/",
+    "Los Lunas Public Schools": "https://llschools.schoolspring.com/",
+    "Loving Municipal Schools": "https://www.lovingschools.com/page/human-resources",
+    "Lovington Municipal Schools": "https://www.applitrack.com/Lovington/onlineapp/default.aspx?all=1",
+    "Magdalena Municipal Schools": "https://www.magdalena.k12.nm.us/employment-opportunities-and-applic",
+    "Maxwell Municipal Schools": "https://www.maxwellp12.com/65538_3",
+    "Melrose Municipal Schools": "https://melroseschools.org/57260",
+    "Mesa Vista Consolidated Schools": "https://www.mesavistacsd.com/o/mvcs/page/job-openings",
+    "Mora Independent Schools": "https://www.mora.k12.nm.us/page/employment-opportunities",
+    "Moriarty Municipal Schools": "https://moriartyedgewoodsdnm.tylerportico.com/tess/citizen/jobs/job-list/jobs",
+    "Mosquero Municipal Schools": "https://www.mosquero.net/human-resources",
+    "Mountainair Public Schools": "https://www.nmreap.net/jobsrchDistrict.php?HTML=REPORT&district=8257000000",
+    "Pecos Independent Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=7047000000",
+    "Peñasco Independent Schools": "https://www.penascoisd.com/page/employment-opportunities",
+    "Pojoaque Valley Schools": "https://www.pvs.k12.nm.us/page/job-opportunities",
+    "Portales Municipal Schools": "https://portalesschools.schoolspring.com/",
+    "Quemado Independent Schools": "https://quemadoschools.org/en-US/employment-4d149f71",
+    "Questa Independent Schools": "https://www.questawildcats.com/apps/jobs/",
+    "Raton Public Schools": "https://www.ratonschools.com/employment.html",
+    "Reserve Independent Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=203000000",
+    "Rio Rancho Public Schools": "https://riorancho.schoolspring.com/",
+    "Roswell Independent Schools": "https://roswellnm.schoolspring.com/",
+    "Roy Municipal Schools": "https://www.royschools.org/",
+    "Ruidoso Municipal Schools": "https://ruidoso.schoolspring.com/",
+    "San Jon Municipal Schools": "https://www.sanjonschools.com/42662",
+    "Santa Fe Public Schools": "https://www.applitrack.com/sfps/onlineapp/default.aspx?all=1",
+    "Santa Rosa Consolidated Schools": "https://app.cariina.com/public/workflows/boards/68deb005f28c66fa095fbe5d",
+    "Silver City Consolidated Schools": "https://silverschools.schoolspring.com/",
+    "Socorro Consolidated Schools": "https://socorro.tedk12.com/hire/index.aspx",
+    "Springer Municipal Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=1007000000",
+    "Taos Municipal Schools": "https://taosschools.schoolspring.com/",
+    "Tatum Municipal Schools": "https://www.tatumschools.org/article/2684891",
+    "Texico Municipal Schools": "https://texicomunicipalschoolsnm.tylerportico.com/tess/citizen/jobs/job-list/jobs",
+    "Truth or Consequences Municipal Schools": "https://www.torcschools.net/page/employment",
+    "Tucumcari Public Schools": "https://www.tucumcarischools.com/o/tps/page/employment-opportunities",
+    "Tularosa Municipal Schools": "https://www.nmreap.net/jobsrchDistrict.php?district=4735000000",
+    "Vaughn Municipal Schools": "https://www.vaughnschools.org/services-4",
+    "Wagon Mound Public Schools": "https://www.wm.k12.nm.us/",
+    "West Las Vegas Public Schools": "https://www.wlvs.k12.nm.us/page/job-postings",
+    "Zuni Public Schools": "https://www.applitrack.com/zpsd/onlineapp/default.aspx?all=1"
+};
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/public schools/g, "")
+              .replace(/municipal schools/g, "")
+              .replace(/consolidated schools/g, "")
+              .replace(/independent schools/g, "")
+              .replace(/independent school district/g, "")
+              .replace(/school district/g, "")
+              .replace(/city schools/g, "")
+              .replace(/schools/g, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+}
+
+var lookup = {};
+for (var originalName in jobLinks) {
+    lookup[normalize(originalName)] = jobLinks[originalName];
+}
+
+// Fetch New Mexico Boundaries (STATEFP='35')
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='35'&outFields=*&f=geojson")
+.then(res => res.json())
+.then(data => {
+    function getStyle(feature) {
+        var name = feature.properties.NAME;
+        var hasLink = lookup.hasOwnProperty(normalize(name));
+        return {
+            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
+            color: "#555555",
+            weight: 1,
+            fillOpacity: 0.6
+        };
+    }
+
+    var geojsonLayer = L.geoJson(data, {
+        style: getStyle,
+        onEachFeature: function(feature, layer) {
+            var name = feature.properties.NAME;
+            var normName = normalize(name);
+            var link = lookup[normName];
+
+            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    geojsonLayer.resetStyle(e.target); 
+                },
+                click: function(e) {
+                    if (link) {
+                        gtag('event', 'click_district', {
+                            'district_name': name,
+                            'state': 'New Mexico'
+                        });
+                        window.open(link, '_blank');
+                    }
+                }
+            });
+        }
+    }).addTo(map);
+});
+</script>
+
+</body>
+</html>
