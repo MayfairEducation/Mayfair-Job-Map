@@ -15,44 +15,54 @@
     </script>
     
     <style>
-        /* Exact Match to IL CSS */
         body { margin: 0; font-family: Arial, sans-serif; }
         h1 { text-align: center; margin: 20px 0; }
         #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
-        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
+        .nav-btn { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background: white; border: 1px solid #ccc; border-radius: 4px; }
+        .nav-btn:hover { background: #f0f0f0; }
         .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+
+        /* Feedback Bar Style */
+        #feedback-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; border: 1px solid #eee; }
+        #feedback-input { border: none; outline: none; width: 220px; font-size: 14px; padding: 5px; background: transparent; }
+        #feedback-submit { display: none; background: #2ecc71; color: white; border: none; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <h1>Nevada School Districts Job Search</h1>
-<button onclick="window.location.href='index.html'">Back to US Map</button>
+<button class="nav-btn" onclick="window.location.href='index.html'">Back to US Map</button>
 <div id="map"></div>
+
+<div id="feedback-container">
+    <form id="feedback-form" action="https://formspree.io/f/YOUR_FORMSPREE_ID" method="POST" style="display: flex; align-items: center; margin: 0;">
+        <input type="text" name="message" id="feedback-input" placeholder="Submit questions and feedback..." required>
+        <input type="hidden" name="source_page" value="Nevada Map">
+        <button type="submit" id="feedback-submit">Send</button>
+    </form>
+    <div id="feedback-thanks" style="display: none; color: #2ecc71; font-weight: bold; font-size: 14px;">✓ Sent! Thanks.</div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-// Nevada-wide view
 var map = L.map('map').setView([38.5, -117.0], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Search Bar
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
     placeholder: "Search Zip or Address...",
     collapsed: false 
 })
 .on('markgeocode', function(e) {
-    var bbox = e.geocode.bbox;
-    map.fitBounds(bbox);
+    map.fitBounds(e.geocode.bbox);
 })
 .addTo(map);
 
-// Full List with Accurate Full Names
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -77,30 +87,21 @@ function normalize(str) {
     if (!str) return "";
     return str.toLowerCase()
               .replace(/school district/g, "")
-              .replace(/community consolidated/g, "")
-              .replace(/community unit/g, "")
-              .replace(/county/g, "")
               .replace(/[^a-z0-9]/g, "")
               .trim();
 }
 
 var lookup = {};
 for (var fullName in jobLinks) {
-    lookup[normalize(fullName)] = {
-        displayName: fullName,
-        link: jobLinks[fullName]
-    };
+    lookup[normalize(fullName)] = { displayName: fullName, link: jobLinks[fullName] };
 }
 
-// Fetch Nevada Data (State Code 32)
-fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='32'&outFields=*&f=geojson")
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='32'&outFields=NAME,GEOID&f=geojson")
 .then(res => res.json())
 .then(data => {
-
     var geojsonLayer = L.geoJson(data, {
         style: function(feature) {
-            var name = feature.properties.NAME;
-            var hasMatch = lookup.hasOwnProperty(normalize(name));
+            var hasMatch = lookup.hasOwnProperty(normalize(feature.properties.NAME));
             return {
                 fillColor: hasMatch ? "#2ecc71" : "#e6e6e6",
                 color: "#555555",
@@ -111,48 +112,51 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
         onEachFeature: function(feature, layer) {
             var rawName = feature.properties.NAME;
             var match = lookup[normalize(rawName)];
-            
             var finalDisplayName = match ? match.displayName : rawName;
             var link = match ? match.link : null;
 
             layer.bindTooltip("<b>" + finalDisplayName + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
 
             layer.on({
-                mouseover: function(e) { 
-                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
-                },
-                mouseout: function(e) { 
-                    geojsonLayer.resetStyle(e.target); 
-                },
+                mouseover: function(e) { e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); },
+                mouseout: function(e) { geojsonLayer.resetStyle(e.target); },
                 click: function() {
                     if (link) {
-
-                        var opened = false;
-
-                        gtag('event', 'click_district', { 
-                            'district_full_name': finalDisplayName, 
-                            'state': 'Nevada',
-                            'event_callback': function() {
-                                if (!opened) {
-                                    opened = true;
-                                    window.open(link, '_blank');
-                                }
-                            }
-                        });
-
-                        // fallback in case GA blocks callback
-                        setTimeout(function(){
-                            if (!opened) {
-                                opened = true;
-                                window.open(link, '_blank');
-                            }
-                        }, 800);
+                        gtag('event', 'click_district', { 'district_name': finalDisplayName, 'state': 'Nevada' });
+                        window.open(link, '_blank');
                     }
                 }
             });
         }
     }).addTo(map);
 });
+
+// Feedback Bar Logic
+const fInput = document.getElementById('feedback-input');
+const fSubmit = document.getElementById('feedback-submit');
+const fForm = document.getElementById('feedback-form');
+const fThanks = document.getElementById('feedback-thanks');
+
+fInput.addEventListener('focus', () => { fSubmit.style.display = 'block'; });
+
+fForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const response = await fetch(fForm.action, {
+        method: 'POST',
+        body: new FormData(fForm),
+        headers: { 'Accept': 'application/json' }
+    });
+    if (response.ok) {
+        fForm.style.display = 'none';
+        fThanks.style.display = 'block';
+        setTimeout(() => {
+            fThanks.style.display = 'none';
+            fForm.style.display = 'flex';
+            fForm.reset();
+            fSubmit.style.display = 'none';
+        }, 4000);
+    }
+};
 </script>
 </body>
 </html>
