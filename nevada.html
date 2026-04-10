@@ -3,6 +3,8 @@
 <head>
     <title>Nevada School Districts Job Map</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
@@ -15,28 +17,94 @@
     </script>
     
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
-        h1 { text-align: center; margin: 20px 0; }
-        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
-        .nav-btn { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background: white; border: 1px solid #ccc; border-radius: 4px; }
-        .nav-btn:hover { background: #f0f0f0; }
+        body { margin: 0; font-family: Arial, sans-serif; overflow-x: hidden; background-color: #f8f9fa; }
+        h1 { text-align: center; margin: 15px 0; font-size: 1.5rem; color: #333; }
+        #map { height: 75vh; width: 98%; margin: auto; border: 1px solid #ccc; z-index: 1; border-radius: 8px; }
         
-        /* Feedback Bar CSS */
-        #feedback-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; border: 1px solid #eee; }
-        #feedback-input { border: none; outline: none; width: 220px; font-size: 14px; padding: 5px; background: transparent; }
-        #feedback-submit { display: none; background: #4285F4; color: white; border: none; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        /* Global Button Style */
+        .nav-btn { 
+            display: inline-block;
+            margin-left: 1%; 
+            margin-bottom: 10px; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            background: #ffffff; 
+            border: 2px solid #4285F4; 
+            color: #4285F4;
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #4285F4; color: white; }
 
-        /* Dynamic District Labels */
+        /* District Labels */
         .district-label {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
             font-weight: bold;
             color: #2c3e50;
-            text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+            text-shadow: 2px 2px 3px white, -2px -2px 3px white;
             pointer-events: none;
             font-size: 12px;
-            display: none; /* Hidden by default, controlled by JS */
+            display: none; 
+        }
+
+        /* FEEDBACK BAR STYLING */
+        #feedback-container { 
+            position: fixed; 
+            bottom: 25px; 
+            right: 20px; 
+            z-index: 2000; 
+            background: white; 
+            padding: 10px 20px; 
+            border-radius: 50px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+            display: flex; 
+            align-items: center; 
+            border: 2px solid #4285F4; 
+        }
+        #feedback-input { border: none; outline: none; width: 220px; font-size: 16px; padding: 8px; background: transparent; }
+        #feedback-submit { 
+            display: none; 
+            background: #4285F4; 
+            color: white; 
+            border: none; 
+            border-radius: 25px; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: bold; 
+            margin-left: 5px;
+        }
+
+        /* MOBILE SPECIFIC OVERRIDES */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.3rem; margin: 12px 5px; }
+            #map { height: 60vh; width: 100%; border-radius: 0; border-left: none; border-right: none; }
+            
+            .nav-btn { 
+                display: block;
+                width: 90%; 
+                margin: 0 auto 15px auto; 
+                text-align: center;
+                padding: 15px;
+                font-size: 18px;
+            }
+            
+            #feedback-container { 
+                width: 85%; 
+                left: 5%; 
+                right: 5%; 
+                bottom: 15px; 
+                padding: 12px 15px; 
+                border-radius: 12px; 
+            }
+            #feedback-input { width: 100%; font-size: 16px; } 
+            
+            .leaflet-control-geocoder { width: 44px !important; height: 44px !important; }
         }
     </style>
 </head>
@@ -44,6 +112,7 @@
 
 <h1>Nevada School Districts Job Search</h1>
 <button class="nav-btn" onclick="window.location.href='index.html'">Back to US Map</button>
+
 <div id="map"></div>
 
 <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) {showSuccess();}"></iframe>
@@ -55,7 +124,7 @@
           id="feedback-form" 
           onsubmit="submitted=true;">
         
-        <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Submit questions and feedback..." required>
+        <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Feedback or Questions..." required>
         <input type="hidden" name="entry.SOME_OTHER_ID" value="Nevada"> 
 
         <button type="submit" id="feedback-submit">Send</button>
@@ -67,17 +136,22 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-var map = L.map('map').setView([38.5, -117.0], 6);
+// Mobile Detection
+var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 var submitted = false;
+
+// Set initial view: Zoom 5 for mobile to see the whole state, Zoom 6 for desktop
+var map = L.map('map').setView([38.5, -117.0], isMobile ? 5 : 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+// Search Bar - Collapsed on Mobile to save space
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
-    placeholder: "Search Zip or Address...",
-    collapsed: false 
+    placeholder: isMobile ? "Search..." : "Search Zip or Address...",
+    collapsed: isMobile ? true : false 
 })
 .on('markgeocode', function(e) {
     map.fitBounds(e.geocode.bbox);
@@ -133,19 +207,21 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             var finalDisplayName = match ? match.displayName : rawName;
             var link = match ? match.link : null;
 
-            // Permanent label (starts hidden via CSS)
+            // Permanent label (Inside Boundary Logic)
             layer.bindTooltip(finalDisplayName, {
                 permanent: true,
                 direction: 'center',
-                className: 'district-label'
+                className: 'district-label',
+                offset: [0, 0]
             });
 
-            // Hover Tooltip (Jobs)
-            layer.bindPopup("<b>" + finalDisplayName + "</b>" + (link ? "<br><a href='" + link + "' target='_blank'>View Job Portal</a>" : ""));
-
             layer.on({
-                mouseover: function(e) { e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); },
-                mouseout: function(e) { geojsonLayer.resetStyle(e.target); },
+                mouseover: function(e) { 
+                    if (!isMobile) e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
+                },
+                mouseout: function(e) { 
+                    if (!isMobile) geojsonLayer.resetStyle(e.target); 
+                },
                 click: function() {
                     if (link) {
                         gtag('event', 'click_district', { 'district_name': finalDisplayName, 'state': 'Nevada' });
@@ -156,12 +232,13 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
         }
     }).addTo(map);
 
-    // Label Visibility Control
+    // Zoom-based Label visibility
     map.on('zoomend', function() {
         var zoom = map.getZoom();
+        var threshold = isMobile ? 8 : 7; // Mobile needs more zoom to see labels
         var labels = document.querySelectorAll('.district-label');
-        labels.forEach(function(label) {
-            label.style.display = (zoom >= 7) ? 'block' : 'none';
+        labels.forEach(function(l) {
+            l.style.display = (zoom >= threshold) ? 'block' : 'none';
         });
     });
 });
