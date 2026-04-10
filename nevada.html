@@ -20,12 +20,11 @@
         #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
         .nav-btn { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; background: white; border: 1px solid #ccc; border-radius: 4px; }
         .nav-btn:hover { background: #f0f0f0; }
-        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
-
-        /* Feedback Bar Style */
+        
+        /* Feedback Bar CSS */
         #feedback-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; border: 1px solid #eee; }
         #feedback-input { border: none; outline: none; width: 220px; font-size: 14px; padding: 5px; background: transparent; }
-        #feedback-submit { display: none; background: #2ecc71; color: white; border: none; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        #feedback-submit { display: none; background: #4285F4; color: white; border: none; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -34,25 +33,36 @@
 <button class="nav-btn" onclick="window.location.href='index.html'">Back to US Map</button>
 <div id="map"></div>
 
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) {showSuccess();}"></iframe>
+
 <div id="feedback-container">
-    <form id="feedback-form" action="https://formspree.io/f/YOUR_FORMSPREE_ID" method="POST" style="display: flex; align-items: center; margin: 0;">
-        <input type="text" name="message" id="feedback-input" placeholder="Submit questions and feedback..." required>
-        <input type="hidden" name="source_page" value="Nevada Map">
+    <form action="https://docs.google.com/forms/d/e/1FAIpQLScjGQuhMgizvq6kSoN1L6By8JB46nvjlf0xearNlpYEnhJYgw/formResponse" 
+          method="POST" 
+          target="hidden_iframe" 
+          id="feedback-form" 
+          onsubmit="submitted=true;">
+        
+        <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Submit questions and feedback..." required>
+        
+        <input type="hidden" name="entry.SOME_OTHER_ID" value="Nevada"> 
+
         <button type="submit" id="feedback-submit">Send</button>
     </form>
-    <div id="feedback-thanks" style="display: none; color: #2ecc71; font-weight: bold; font-size: 14px;">✓ Sent! Thanks.</div>
+    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; font-size: 14px;">✓ Feedback sent!</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
+// Nevada View
 var map = L.map('map').setView([38.5, -117.0], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+// Search
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
     placeholder: "Search Zip or Address...",
@@ -63,6 +73,7 @@ var geocoder = L.Control.geocoder({
 })
 .addTo(map);
 
+// District Links
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -85,10 +96,7 @@ var jobLinks = {
 
 function normalize(str) {
     if (!str) return "";
-    return str.toLowerCase()
-              .replace(/school district/g, "")
-              .replace(/[^a-z0-9]/g, "")
-              .trim();
+    return str.toLowerCase().replace(/school district/g, "").replace(/[^a-z0-9]/g, "").trim();
 }
 
 var lookup = {};
@@ -96,6 +104,7 @@ for (var fullName in jobLinks) {
     lookup[normalize(fullName)] = { displayName: fullName, link: jobLinks[fullName] };
 }
 
+// Fetch State Data
 fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='32'&outFields=NAME,GEOID&f=geojson")
 .then(res => res.json())
 .then(data => {
@@ -131,7 +140,8 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
     }).addTo(map);
 });
 
-// Feedback Bar Logic
+// Feedback Logic
+var submitted = false;
 const fInput = document.getElementById('feedback-input');
 const fSubmit = document.getElementById('feedback-submit');
 const fForm = document.getElementById('feedback-form');
@@ -139,14 +149,8 @@ const fThanks = document.getElementById('feedback-thanks');
 
 fInput.addEventListener('focus', () => { fSubmit.style.display = 'block'; });
 
-fForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const response = await fetch(fForm.action, {
-        method: 'POST',
-        body: new FormData(fForm),
-        headers: { 'Accept': 'application/json' }
-    });
-    if (response.ok) {
+function showSuccess() {
+    if(submitted) {
         fForm.style.display = 'none';
         fThanks.style.display = 'block';
         setTimeout(() => {
@@ -154,9 +158,10 @@ fForm.onsubmit = async (e) => {
             fForm.style.display = 'flex';
             fForm.reset();
             fSubmit.style.display = 'none';
+            submitted = false;
         }, 4000);
     }
-};
+}
 </script>
 </body>
 </html>
