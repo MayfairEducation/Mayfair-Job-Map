@@ -11,34 +11,40 @@
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background-color: #f8f9fa; }
         h1 { text-align: center; margin: 15px 0; font-size: 1.5rem; color: #333; }
-        #map { height: 75vh; width: 98%; margin: auto; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+        #map { height: 75vh; width: 98%; margin: auto; border: 1px solid #ccc; border-radius: 8px; background: #fff; z-index: 1; }
         
-        /* Navigation Button */
         .nav-btn { 
             display: inline-block; margin-left: 1%; margin-bottom: 10px; padding: 12px 20px; 
             background: #ffffff; border: 2px solid #4285F4; color: #4285F4;
             border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none;
         }
 
-        /* Clean Labels - Mobile Only */
+        /* Labels hidden by default */
         .district-label {
-            background: transparent !important; border: none !important; box-shadow: none !important;
-            font-weight: bold; color: #2c3e50; text-shadow: 1px 1px 2px white;
-            pointer-events: none; font-size: 11px; text-transform: uppercase;
-            display: none; /* Controlled by JS zoom + Device check */
+            background: transparent !important; 
+            border: none !important; 
+            box-shadow: none !important;
+            font-weight: bold; 
+            color: #2c3e50; 
+            text-shadow: 1px 1px 2px white;
+            pointer-events: none; 
+            font-size: 10px; 
+            text-transform: uppercase;
+            display: none !important; 
         }
 
-        /* Feedback Bar */
+        /* Class added via JS on zoom */
+        .show-label {
+            display: block !important;
+        }
+
         #feedback-container { 
             position: fixed; bottom: 25px; right: 20px; z-index: 2000; 
             background: white; padding: 10px 20px; border-radius: 50px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; align-items: center; border: 2px solid #4285F4; 
         }
         #feedback-input { border: none; outline: none; width: 220px; font-size: 16px; padding: 8px; background: transparent; }
-        #feedback-submit { 
-            display: none; background: #4285F4; color: white; border: none; 
-            border-radius: 25px; padding: 10px 18px; cursor: pointer; font-weight: bold; 
-        }
+        #feedback-submit { display: none; background: #4285F4; color: white; border: none; border-radius: 25px; padding: 10px 18px; cursor: pointer; font-weight: bold; }
 
         @media (max-width: 768px) {
             #map { height: 60vh; width: 100%; border-radius: 0; }
@@ -80,12 +86,12 @@ var geocoder = L.Control.geocoder({
     collapsed: isMobile
 }).on('markgeocode', function(e) { map.fitBounds(e.geocode.bbox); }).addTo(map);
 
-// Cleaning function for shorter names
+// Set names to "X County" instead of "X District"
 function cleanName(name) {
-    return name.replace(/School District/gi, "")
-               .replace(/County/gi, "")
-               .replace(/Public Schools/gi, "")
-               .replace(/Community Unit/gi, "")
+    return name.replace(/School District/gi, "County")
+               .replace(/Public Schools/gi, "County")
+               .replace(/Community Unit/gi, "County")
+               .replace(/County County/gi, "County") // Prevent double "County"
                .trim();
 }
 
@@ -133,13 +139,12 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             var display = match ? match.displayName : cleanName(rawName);
             var link = match ? match.link : null;
 
-            // Only bind permanent labels if on Mobile
             if (isMobile) {
                 layer.bindTooltip(display, { permanent: true, direction: 'center', className: 'district-label' });
+            } else {
+                // Desktop: Hover sticky tooltip
+                layer.bindTooltip("<b>" + display + "</b>" + (link ? "<br>Click to view jobs" : ""), { sticky: true });
             }
-
-            // Desktop Hover Tooltip
-            layer.bindTooltip("<b>" + display + "</b>" + (link ? "<br>Click to view jobs" : ""), { sticky: true });
 
             layer.on({
                 mouseover: function(e) { if(!isMobile) e.target.setStyle({ fillOpacity: 0.9, fillColor: '#66ccff' }); },
@@ -149,17 +154,23 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
         }
     }).addTo(map);
 
-    // Zoom listener for mobile labels only
-    map.on('zoomend', function() {
-        if (isMobile) {
-            var zoom = map.getZoom();
-            var labels = document.querySelectorAll('.district-label');
-            labels.forEach(l => l.style.display = (zoom >= 8) ? 'block' : 'none');
-        }
-    });
+    function updateLabelVisibility() {
+        var zoom = map.getZoom();
+        var threshold = isMobile ? 8 : 10; 
+        var labels = document.querySelectorAll('.district-label');
+        labels.forEach(l => {
+            if (zoom >= threshold) {
+                l.classList.add('show-label');
+            } else {
+                l.classList.remove('show-label');
+            }
+        });
+    }
+
+    map.on('zoomend', updateLabelVisibility);
+    updateLabelVisibility(); 
 });
 
-// Feedback UI logic
 const fInput = document.getElementById('feedback-input');
 const fSubmit = document.getElementById('feedback-submit');
 const fForm = document.getElementById('feedback-form');
