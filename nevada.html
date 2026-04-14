@@ -19,37 +19,38 @@
             border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none;
         }
 
-        /* Labels hidden by default */
         .district-label {
-            background: transparent !important; 
-            border: none !important; 
-            box-shadow: none !important;
-            font-weight: bold; 
-            color: #2c3e50; 
-            text-shadow: 1px 1px 2px white;
-            pointer-events: none; 
-            font-size: 10px; 
-            text-transform: uppercase;
-            display: none !important; 
+            background: transparent !important; border: none !important; box-shadow: none !important;
+            font-weight: bold; color: #2c3e50; text-shadow: 1px 1px 2px white;
+            pointer-events: none; font-size: 10px; text-transform: uppercase; display: none !important; 
         }
 
-        /* Class added via JS on zoom */
-        .show-label {
-            display: block !important;
-        }
+        .show-label { display: block !important; }
 
+        /* FEEDBACK & CONNECT BAR */
         #feedback-container { 
             position: fixed; bottom: 25px; right: 20px; z-index: 2000; 
-            background: white; padding: 10px 20px; border-radius: 50px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; align-items: center; border: 2px solid #4285F4; 
+            background: white; padding: 12px 20px; border-radius: 30px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 2px solid #4285F4;
+            transition: all 0.3s ease; max-width: 90%;
         }
-        #feedback-input { border: none; outline: none; width: 220px; font-size: 16px; padding: 8px; background: transparent; }
-        #feedback-submit { display: none; background: #4285F4; color: white; border: none; border-radius: 25px; padding: 10px 18px; cursor: pointer; font-weight: bold; }
+        
+        .form-row { display: flex; align-items: center; gap: 10px; }
+        .connect-fields { display: none; flex-direction: column; gap: 8px; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        
+        input { border: none; outline: none; font-size: 16px; background: transparent; width: 100%; }
+        .connect-btn { color: #4285F4; cursor: pointer; font-size: 12px; font-weight: bold; text-decoration: underline; white-space: nowrap; }
+        
+        #feedback-submit { 
+            background: #4285F4; color: white; border: none; 
+            border-radius: 20px; padding: 8px 15px; cursor: pointer; font-weight: bold; 
+            margin-top: 5px; width: 100%; display: none;
+        }
 
         @media (max-width: 768px) {
             #map { height: 60vh; width: 100%; border-radius: 0; }
             .nav-btn { display: block; width: 90%; margin: 0 auto 15px auto; text-align: center; }
-            #feedback-container { width: 85%; left: 5%; bottom: 15px; border-radius: 12px; }
+            #feedback-container { left: 5%; right: 5%; bottom: 15px; border-radius: 15px; width: auto; }
         }
     </style>
 </head>
@@ -64,10 +65,21 @@
 
 <div id="feedback-container">
     <form action="https://docs.google.com/forms/d/e/1FAIpQLScjGQuhMgizvq6kSoN1L6By8JB46nvjlf0xearNlpYEnhJYgw/formResponse" method="POST" target="hidden_iframe" id="feedback-form" onsubmit="submitted=true;">
-        <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Questions or feedback?" required>
-        <button type="submit" id="feedback-submit">Send</button>
+        
+        <div class="form-row">
+            <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Anonymous Feedback..." required>
+            <span class="connect-btn" id="toggle-connect">Connect with us?</span>
+        </div>
+
+        <div class="connect-fields" id="connect-fields">
+            <input type="email" name="entry.EMAIL_ID" placeholder="Email Address (Optional)">
+            <input type="tel" name="entry.PHONE_ID" placeholder="Phone Number (Optional)">
+            <small style="color: #666; font-size: 10px;">Sharing info allows us to respond to your inquiry.</small>
+        </div>
+
+        <button type="submit" id="feedback-submit">Submit Feedback</button>
     </form>
-    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold;">✓ Received!</div>
+    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; text-align: center;">✓ Sent! Thank you.</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -86,14 +98,11 @@ var geocoder = L.Control.geocoder({
     collapsed: isMobile
 }).on('markgeocode', function(e) { map.fitBounds(e.geocode.bbox); }).addTo(map);
 
-// Strictly DELETES the ending phrases
 function cleanName(name) {
-    return name.replace(/School District/gi, "")
-               .replace(/Public Schools/gi, "")
-               .replace(/Community Unit/gi, "")
-               .trim();
+    return name.replace(/School District/gi, "").replace(/Public Schools/gi, "").replace(/Community Unit/gi, "").trim();
 }
 
+// [JobLinks and Normalize logic remain exactly the same as previous...]
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -154,30 +163,39 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
 
     function updateLabelVisibility() {
         var zoom = map.getZoom();
-        var threshold = isMobile ? 8 : 11; // Ensure desktop doesn't show them unless super close
         var labels = document.querySelectorAll('.district-label');
         labels.forEach(l => {
-            if (zoom >= threshold) {
-                l.classList.add('show-label');
-            } else {
-                l.classList.remove('show-label');
-            }
+            if (zoom >= 8) { l.classList.add('show-label'); } 
+            else { l.classList.remove('show-label'); }
         });
     }
-
     map.on('zoomend', updateLabelVisibility);
-    updateLabelVisibility(); 
 });
 
+// NEW FEEDBACK & CONNECT LOGIC
 const fInput = document.getElementById('feedback-input');
 const fSubmit = document.getElementById('feedback-submit');
-const fForm = document.getElementById('feedback-form');
-const fThanks = document.getElementById('feedback-thanks');
-fInput.addEventListener('focus', () => { fSubmit.style.display = 'block'; });
+const toggleBtn = document.getElementById('toggle-connect');
+const connectFields = document.getElementById('connect-fields');
+
+// Show Submit button when they start typing
+fInput.addEventListener('input', () => { 
+    if(fInput.value.length > 0) fSubmit.style.display = 'block'; 
+});
+
+// Toggle the Email/Phone fields
+toggleBtn.addEventListener('click', () => {
+    const isHidden = connectFields.style.display === '' || connectFields.style.display === 'none';
+    connectFields.style.display = isHidden ? 'flex' : 'none';
+    toggleBtn.innerText = isHidden ? 'Hide info' : 'Connect with us?';
+    fSubmit.style.display = 'block'; // Always show submit if they open connect
+});
+
 function showSuccess() {
     if(submitted) {
-        fForm.style.display = 'none'; fThanks.style.display = 'block';
-        setTimeout(() => { fThanks.style.display = 'none'; fForm.style.display = 'flex'; fForm.reset(); fSubmit.style.display = 'none'; submitted = false; }, 4000);
+        document.getElementById('feedback-form').style.display = 'none'; 
+        document.getElementById('feedback-thanks').style.display = 'block';
+        setTimeout(() => { location.reload(); }, 3000); // Reload to reset the state
     }
 }
 </script>
