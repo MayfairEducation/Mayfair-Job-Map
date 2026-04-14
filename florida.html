@@ -3,6 +3,8 @@
 <head>
     <title>Florida School Districts Job Map</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
@@ -15,39 +17,105 @@
     </script>
     
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
-        h1 { text-align: center; margin: 20px 0; }
-        #map { height: 85vh; width: 95%; margin: auto; border: 1px solid #ccc; }
-        button { margin-left: 2.5%; margin-bottom: 10px; padding: 8px 15px; cursor: pointer; }
-        .leaflet-control-geocoder { border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
+        body { margin: 0; font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        h1 { text-align: center; margin: 15px 0; font-size: 1.5rem; color: #333; }
+        #map { height: 75vh; width: 98%; margin: auto; border: 1px solid #ccc; border-radius: 8px; background: #fff; z-index: 1; }
+        
+        .nav-btn { 
+            display: inline-block; margin-left: 1%; margin-bottom: 10px; padding: 12px 20px; 
+            background: #ffffff; border: 2px solid #4285F4; color: #4285F4;
+            border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none;
+        }
+
+        .district-label {
+            background: transparent !important; border: none !important; box-shadow: none !important;
+            font-weight: bold; color: #2c3e50; text-shadow: 1px 1px 2px white;
+            pointer-events: none; font-size: 10px; text-transform: uppercase; display: none !important; 
+        }
+        .show-label { display: block !important; }
+
+        #feedback-container { 
+            position: fixed; bottom: 25px; right: 20px; z-index: 2000; 
+            background: white; padding: 10px 15px; border-radius: 30px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 2px solid #4285F4;
+            width: 320px; max-width: 85%; transition: all 0.3s ease-in-out;
+        }
+        
+        #feedback-container.expanded { border-radius: 15px; padding: 15px; }
+        #feedback-form { display: flex; flex-direction: column; gap: 8px; }
+        
+        .extra-fields { display: none; flex-direction: column; gap: 8px; margin-top: 5px; }
+        #feedback-container.expanded .extra-fields { display: flex; }
+
+        input { border: 1px solid transparent; outline: none; font-size: 15px; background: transparent; width: 100%; padding: 5px; }
+        #feedback-container.expanded input { border: 1px solid #eee; background: #fafafa; border-radius: 5px; padding: 8px; }
+        
+        .response-note { font-size: 10px; color: #666; font-style: italic; display: none; }
+        #feedback-container.expanded .response-note { display: block; }
+
+        #feedback-submit { 
+            background: #4285F4; color: white; border: none; 
+            border-radius: 5px; padding: 10px; cursor: pointer; 
+            font-weight: bold; display: none; margin-top: 5px;
+        }
+        #feedback-container.expanded #feedback-submit { display: block; }
+
+        @media (max-width: 768px) {
+            #map { height: 60vh; width: 100%; border-radius: 0; }
+            .nav-btn { display: block; width: 90%; margin: 0 auto 15px auto; text-align: center; }
+            #feedback-container { left: 5%; right: 5%; bottom: 15px; width: auto; }
+        }
     </style>
 </head>
 <body>
 
-<h1>Florida School Districts Job Search</h1>
-<button onclick="window.location.href='index.html'">Back to US Map</button>
+<h1>Florida School Districts</h1>
+<a href="index.html" class="nav-btn">Back to US Map</a>
+
 <div id="map"></div>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) {showSuccess();}"></iframe>
+
+<div id="feedback-container">
+    <form action="https://docs.google.com/forms/d/e/1FAIpQLScjGQuhMgizvq6kSoN1L6By8JB46nvjlf0xearNlpYEnhJYgw/formResponse" method="POST" target="hidden_iframe" id="feedback-form" onsubmit="submitted=true;">
+        
+        <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
+
+        <div class="extra-fields" id="extra-fields">
+            <input type="text" name="entry.973226408" id="name-input" placeholder="Your Name (Optional)">
+            <input type="email" name="entry.1613736585" id="email-input" placeholder="Email (Required for a response)">
+            <input type="tel" name="entry.546569702" id="phone-input" placeholder="Phone Number (Optional)">
+            
+            <input type="hidden" name="entry.607554921" value="Florida Map Inquiry">
+
+            <div class="response-note">Providing contact info helps us respond to your inquiry.</div>
+            <button type="submit" id="feedback-submit">Send Inquiry</button>
+        </div>
+    </form>
+    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; text-align: center; padding: 5px;">
+        ✓ Thank you! We'll be in touch.
+    </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-var map = L.map('map').setView([27.8, -83.5], 7);
+var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+var submitted = false;
+var map = L.map('map').setView([27.8, -83.5], isMobile ? 6 : 7);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
 var geocoder = L.Control.geocoder({
     defaultMarkGeocode: false,
-    placeholder: "Search Zip or Address...",
-    collapsed: false 
-})
-.on('markgeocode', function(e) {
-    var bbox = e.geocode.bbox;
-    map.fitBounds(bbox);
-})
-.addTo(map);
+    placeholder: "Search...",
+    collapsed: isMobile
+}).on('markgeocode', function(e) { map.fitBounds(e.geocode.bbox); }).addTo(map);
+
+function cleanName(name) {
+    return name.replace(/School District/gi, "").replace(/District Schools/gi, "").replace(/Public Schools/gi, "").replace(/County/gi, "").trim();
+}
 
 var jobLinks = {
     "Alachua": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinalachuafl/Rapplmnu03.w",
@@ -125,71 +193,83 @@ function normalize(str) {
               .replace(/school district/g, "")
               .replace(/district schools/g, "")
               .replace(/public schools/g, "")
-              .replace(/community consolidated/g, "")
-              .replace(/community unit/g, "")
-              .replace(/township/g, "")
-              .replace(/sd/g, "")
-              .replace(/cusd/g, "")
               .replace(/county/g, "")
-              .replace(/[^a-z0-9]/g, "")
-              .trim();
-    
-    // --- MANUAL OVERRIDES FOR GEODATA DISCREPANCIES ---
-    if (n === "dade") return "miamidade"; // Fixes Miami-Dade
-    if (n === "stjohns") return "stjohns"; // Ensures consistency
-    
+              .replace(/[^a-z0-9]/g, "").trim();
+    if (n === "dade") return "miamidade"; 
     return n;
 }
 
 var lookup = {};
-for (var originalName in jobLinks) {
-    lookup[normalize(originalName)] = jobLinks[originalName];
+for (var fullName in jobLinks) {
+    lookup[normalize(fullName)] = { displayName: cleanName(fullName), link: jobLinks[fullName] };
 }
 
-fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='12'&outFields=*&f=geojson")
+fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query?where=STATEFP='12'&outFields=NAME&f=geojson")
 .then(res => res.json())
 .then(data => {
-    function getStyle(feature) {
-        var name = feature.properties.NAME;
-        var hasLink = lookup.hasOwnProperty(normalize(name));
-        return {
-            fillColor: hasLink ? "#2ecc71" : "#e6e6e6",
-            color: "#555555",
-            weight: 1,
-            fillOpacity: 0.6
-        };
-    }
-
     var geojsonLayer = L.geoJson(data, {
-        style: getStyle,
+        style: function(feature) {
+            var hasMatch = lookup.hasOwnProperty(normalize(feature.properties.NAME));
+            return { fillColor: hasMatch ? "#2ecc71" : "#e6e6e6", color: "#555", weight: 1, fillOpacity: 0.6 };
+        },
         onEachFeature: function(feature, layer) {
-            var name = feature.properties.NAME;
-            var normName = normalize(name);
-            var link = lookup[normName];
-
-            layer.bindTooltip("<b>" + name + "</b>" + (link ? "<br><small>Click to view jobs</small>" : ""), { sticky: true });
+            var rawName = feature.properties.NAME;
+            var match = lookup[normalize(rawName)];
+            var display = match ? match.displayName : cleanName(rawName);
+            var link = match ? match.link : null;
+            
+            layer.bindTooltip(display, { permanent: true, direction: 'center', className: 'district-label' });
+            
+            if (!isMobile) {
+                layer.bindTooltip("<b>" + display + "</b>" + (link ? "<br>Click to view jobs" : ""), { sticky: true });
+            }
 
             layer.on({
-                mouseover: function(e) { 
-                    e.target.setStyle({ fillColor: "#66ccff", fillOpacity: 0.9 }); 
-                },
-                mouseout: function(e) { 
-                    geojsonLayer.resetStyle(e.target); 
-                },
-                click: function(e) {
+                mouseover: function(e) { if(!isMobile) e.target.setStyle({ fillOpacity: 0.9, fillColor: '#66ccff' }); },
+                mouseout: function(e) { if(!isMobile) geojsonLayer.resetStyle(e.target); },
+                click: function() { 
                     if (link) {
-                        gtag('event', 'click_district', {
-                            'district_name': name,
-                            'state': 'Florida'
-                        });
+                        gtag('event', 'click_district', { 'district_name': display, 'state': 'Florida' });
                         window.open(link, '_blank');
                     }
                 }
             });
         }
     }).addTo(map);
-});
-</script>
 
+    function updateLabelVisibility() {
+        var zoom = map.getZoom();
+        var labels = document.querySelectorAll('.district-label');
+        labels.forEach(l => {
+            if (zoom >= 8) { l.classList.add('show-label'); } 
+            else { l.classList.remove('show-label'); }
+        });
+    }
+    map.on('zoomend', updateLabelVisibility);
+    updateLabelVisibility();
+});
+
+const container = document.getElementById('feedback-container');
+const mainInput = document.getElementById('main-input');
+const nameInput = document.getElementById('name-input');
+const emailInput = document.getElementById('email-input');
+
+mainInput.addEventListener('focus', () => { container.classList.add('expanded'); });
+
+map.on('mousedown', function() {
+    if (mainInput.value === "" && nameInput.value === "" && emailInput.value === "") {
+        container.classList.remove('expanded');
+        mainInput.blur();
+    }
+});
+
+function showSuccess() {
+    if(submitted) {
+        document.getElementById('feedback-form').style.display = 'none'; 
+        document.getElementById('feedback-thanks').style.display = 'block';
+        setTimeout(() => { location.reload(); }, 3000);
+    }
+}
+</script>
 </body>
 </html>
