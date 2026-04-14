@@ -27,36 +27,40 @@
         }
         .show-label { display: block !important; }
 
-        /* UNIFIED CONTACT & FEEDBACK DRAWER */
+        /* EXPANDABLE CONTACT DRAWER */
         #feedback-container { 
             position: fixed; bottom: 25px; right: 20px; z-index: 2000; 
-            background: white; padding: 15px; border-radius: 15px; 
-            box-shadow: 0 4px 25px rgba(0,0,0,0.25); border: 2px solid #4285F4;
-            width: 300px; max-width: 85%;
+            background: white; padding: 10px 15px; border-radius: 30px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 2px solid #4285F4;
+            width: 320px; max-width: 85%; transition: all 0.3s ease-in-out;
         }
         
+        /* State when expanded */
+        #feedback-container.expanded { border-radius: 15px; padding: 15px; }
+
         #feedback-form { display: flex; flex-direction: column; gap: 8px; }
         
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        
-        input, select { 
-            border: 1px solid #eee; border-radius: 5px; padding: 8px 10px; 
-            font-size: 14px; outline: none; background: #fafafa;
-        }
-        input:focus { border-color: #4285F4; background: #fff; }
+        /* Hide extra fields by default */
+        .extra-fields { display: none; flex-direction: column; gap: 8px; margin-top: 5px; }
+        #feedback-container.expanded .extra-fields { display: flex; }
 
-        .response-note { font-size: 10px; color: #666; margin-top: 2px; font-style: italic; }
+        input { border: 1px solid transparent; outline: none; font-size: 15px; background: transparent; width: 100%; padding: 5px; }
+        #feedback-container.expanded input { border: 1px solid #eee; background: #fafafa; border-radius: 5px; padding: 8px; }
         
+        .response-note { font-size: 10px; color: #666; font-style: italic; display: none; }
+        #feedback-container.expanded .response-note { display: block; }
+
         #feedback-submit { 
             background: #4285F4; color: white; border: none; 
             border-radius: 5px; padding: 10px; cursor: pointer; 
-            font-weight: bold; margin-top: 5px; display: none; /* Shows on focus */
+            font-weight: bold; display: none; margin-top: 5px;
         }
+        #feedback-container.expanded #feedback-submit { display: block; }
 
         @media (max-width: 768px) {
-            #map { height: 55vh; width: 100%; border-radius: 0; }
+            #map { height: 60vh; width: 100%; border-radius: 0; }
             .nav-btn { display: block; width: 90%; margin: 0 auto 15px auto; text-align: center; }
-            #feedback-container { left: 5%; right: 5%; bottom: 10px; width: auto; padding: 12px; }
+            #feedback-container { left: 5%; right: 5%; bottom: 15px; width: auto; }
         }
     </style>
 </head>
@@ -72,20 +76,17 @@
 <div id="feedback-container">
     <form action="https://docs.google.com/forms/d/e/1FAIpQLScjGQuhMgizvq6kSoN1L6By8JB46nvjlf0xearNlpYEnhJYgw/formResponse" method="POST" target="hidden_iframe" id="feedback-form" onsubmit="submitted=true;">
         
-        <div class="input-group">
-            <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
-        </div>
+        <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
 
-        <div class="input-group">
-            <input type="text" name="entry.NAME_ID" placeholder="Name">
-            <input type="email" name="entry.EMAIL_ID" placeholder="Email (for a response)">
-            <input type="tel" name="entry.PHONE_ID" placeholder="Phone (Optional)">
-            <div class="response-note">Note: Contact info is required if you'd like a response from our team.</div>
+        <div class="extra-fields" id="extra-fields">
+            <input type="text" name="entry.NAME_ID" id="name-input" placeholder="Your Name">
+            <input type="email" name="entry.EMAIL_ID" id="email-input" placeholder="Email (for a response)">
+            <input type="tel" name="entry.PHONE_ID" id="phone-input" placeholder="Phone (Optional)">
+            <div class="response-note">Note: Providing contact info helps us respond to your inquiry.</div>
+            <button type="submit" id="feedback-submit">Send Inquiry</button>
         </div>
-
-        <button type="submit" id="feedback-submit">Submit Inquiry</button>
     </form>
-    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; text-align: center; padding: 10px;">
+    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; text-align: center; padding: 5px;">
         ✓ Thank you! We'll be in touch.
     </div>
 </div>
@@ -110,7 +111,7 @@ function cleanName(name) {
     return name.replace(/School District/gi, "").replace(/Public Schools/gi, "").replace(/Community Unit/gi, "").trim();
 }
 
-// [JobLinks and GeoJSON Logic remains the same...]
+// [JobLinks and GeoJSON Logic...]
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -175,12 +176,24 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
     map.on('zoomend', updateLabelVisibility);
 });
 
-// SUBMIT BUTTON LOGIC
-const fForm = document.getElementById('feedback-form');
-const fSubmit = document.getElementById('feedback-submit');
+// DRAWER INTERACTION LOGIC
+const container = document.getElementById('feedback-container');
+const mainInput = document.getElementById('main-input');
+const nameInput = document.getElementById('name-input');
 
-// Show submit button when any input is focused
-fForm.addEventListener('focusin', () => { fSubmit.style.display = 'block'; });
+// Expand when clicking the input
+mainInput.addEventListener('focus', () => {
+    container.classList.add('expanded');
+});
+
+// Collapse when clicking the map
+map.on('mousedown', function() {
+    // Only collapse if they haven't started filling out the form
+    if (mainInput.value === "" && nameInput.value === "") {
+        container.classList.remove('expanded');
+        mainInput.blur();
+    }
+});
 
 function showSuccess() {
     if(submitted) {
