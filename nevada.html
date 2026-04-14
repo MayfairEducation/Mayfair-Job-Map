@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nevada Job Map</title>
+    <title>Nevada School Districts Job Map</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
@@ -19,38 +19,44 @@
             border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none;
         }
 
+        /* Mobile Labels */
         .district-label {
             background: transparent !important; border: none !important; box-shadow: none !important;
             font-weight: bold; color: #2c3e50; text-shadow: 1px 1px 2px white;
             pointer-events: none; font-size: 10px; text-transform: uppercase; display: none !important; 
         }
-
         .show-label { display: block !important; }
 
-        /* FEEDBACK & CONNECT BAR */
+        /* UNIFIED CONTACT & FEEDBACK DRAWER */
         #feedback-container { 
             position: fixed; bottom: 25px; right: 20px; z-index: 2000; 
-            background: white; padding: 12px 20px; border-radius: 30px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 2px solid #4285F4;
-            transition: all 0.3s ease; max-width: 90%;
+            background: white; padding: 15px; border-radius: 15px; 
+            box-shadow: 0 4px 25px rgba(0,0,0,0.25); border: 2px solid #4285F4;
+            width: 300px; max-width: 85%;
         }
         
-        .form-row { display: flex; align-items: center; gap: 10px; }
-        .connect-fields { display: none; flex-direction: column; gap: 8px; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        #feedback-form { display: flex; flex-direction: column; gap: 8px; }
         
-        input { border: none; outline: none; font-size: 16px; background: transparent; width: 100%; }
-        .connect-btn { color: #4285F4; cursor: pointer; font-size: 12px; font-weight: bold; text-decoration: underline; white-space: nowrap; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        
+        input, select { 
+            border: 1px solid #eee; border-radius: 5px; padding: 8px 10px; 
+            font-size: 14px; outline: none; background: #fafafa;
+        }
+        input:focus { border-color: #4285F4; background: #fff; }
+
+        .response-note { font-size: 10px; color: #666; margin-top: 2px; font-style: italic; }
         
         #feedback-submit { 
             background: #4285F4; color: white; border: none; 
-            border-radius: 20px; padding: 8px 15px; cursor: pointer; font-weight: bold; 
-            margin-top: 5px; width: 100%; display: none;
+            border-radius: 5px; padding: 10px; cursor: pointer; 
+            font-weight: bold; margin-top: 5px; display: none; /* Shows on focus */
         }
 
         @media (max-width: 768px) {
-            #map { height: 60vh; width: 100%; border-radius: 0; }
+            #map { height: 55vh; width: 100%; border-radius: 0; }
             .nav-btn { display: block; width: 90%; margin: 0 auto 15px auto; text-align: center; }
-            #feedback-container { left: 5%; right: 5%; bottom: 15px; border-radius: 15px; width: auto; }
+            #feedback-container { left: 5%; right: 5%; bottom: 10px; width: auto; padding: 12px; }
         }
     </style>
 </head>
@@ -66,20 +72,22 @@
 <div id="feedback-container">
     <form action="https://docs.google.com/forms/d/e/1FAIpQLScjGQuhMgizvq6kSoN1L6By8JB46nvjlf0xearNlpYEnhJYgw/formResponse" method="POST" target="hidden_iframe" id="feedback-form" onsubmit="submitted=true;">
         
-        <div class="form-row">
-            <input type="text" name="entry.1624001477" id="feedback-input" placeholder="Anonymous Feedback..." required>
-            <span class="connect-btn" id="toggle-connect">Connect with us?</span>
+        <div class="input-group">
+            <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
         </div>
 
-        <div class="connect-fields" id="connect-fields">
-            <input type="email" name="entry.EMAIL_ID" placeholder="Email Address (Optional)">
-            <input type="tel" name="entry.PHONE_ID" placeholder="Phone Number (Optional)">
-            <small style="color: #666; font-size: 10px;">Sharing info allows us to respond to your inquiry.</small>
+        <div class="input-group">
+            <input type="text" name="entry.NAME_ID" placeholder="Name">
+            <input type="email" name="entry.EMAIL_ID" placeholder="Email (for a response)">
+            <input type="tel" name="entry.PHONE_ID" placeholder="Phone (Optional)">
+            <div class="response-note">Note: Contact info is required if you'd like a response from our team.</div>
         </div>
 
-        <button type="submit" id="feedback-submit">Submit Feedback</button>
+        <button type="submit" id="feedback-submit">Submit Inquiry</button>
     </form>
-    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; text-align: center;">✓ Sent! Thank you.</div>
+    <div id="feedback-thanks" style="display: none; color: #4285F4; font-weight: bold; text-align: center; padding: 10px;">
+        ✓ Thank you! We'll be in touch.
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -102,7 +110,7 @@ function cleanName(name) {
     return name.replace(/School District/gi, "").replace(/Public Schools/gi, "").replace(/Community Unit/gi, "").trim();
 }
 
-// [JobLinks and Normalize logic remain exactly the same as previous...]
+// [JobLinks and GeoJSON Logic remains the same...]
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -146,13 +154,8 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
             var match = lookup[normalize(rawName)];
             var display = match ? match.displayName : cleanName(rawName);
             var link = match ? match.link : null;
-
-            if (isMobile) {
-                layer.bindTooltip(display, { permanent: true, direction: 'center', className: 'district-label' });
-            } else {
-                layer.bindTooltip("<b>" + display + "</b>" + (link ? "<br>Click to view jobs" : ""), { sticky: true });
-            }
-
+            if (isMobile) { layer.bindTooltip(display, { permanent: true, direction: 'center', className: 'district-label' }); } 
+            else { layer.bindTooltip("<b>" + display + "</b>" + (link ? "<br>Click to view jobs" : ""), { sticky: true }); }
             layer.on({
                 mouseover: function(e) { if(!isMobile) e.target.setStyle({ fillOpacity: 0.9, fillColor: '#66ccff' }); },
                 mouseout: function(e) { if(!isMobile) geojsonLayer.resetStyle(e.target); },
@@ -172,30 +175,18 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
     map.on('zoomend', updateLabelVisibility);
 });
 
-// NEW FEEDBACK & CONNECT LOGIC
-const fInput = document.getElementById('feedback-input');
+// SUBMIT BUTTON LOGIC
+const fForm = document.getElementById('feedback-form');
 const fSubmit = document.getElementById('feedback-submit');
-const toggleBtn = document.getElementById('toggle-connect');
-const connectFields = document.getElementById('connect-fields');
 
-// Show Submit button when they start typing
-fInput.addEventListener('input', () => { 
-    if(fInput.value.length > 0) fSubmit.style.display = 'block'; 
-});
-
-// Toggle the Email/Phone fields
-toggleBtn.addEventListener('click', () => {
-    const isHidden = connectFields.style.display === '' || connectFields.style.display === 'none';
-    connectFields.style.display = isHidden ? 'flex' : 'none';
-    toggleBtn.innerText = isHidden ? 'Hide info' : 'Connect with us?';
-    fSubmit.style.display = 'block'; // Always show submit if they open connect
-});
+// Show submit button when any input is focused
+fForm.addEventListener('focusin', () => { fSubmit.style.display = 'block'; });
 
 function showSuccess() {
     if(submitted) {
         document.getElementById('feedback-form').style.display = 'none'; 
         document.getElementById('feedback-thanks').style.display = 'block';
-        setTimeout(() => { location.reload(); }, 3000); // Reload to reset the state
+        setTimeout(() => { location.reload(); }, 3000);
     }
 }
 </script>
