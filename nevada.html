@@ -35,12 +35,10 @@
             width: 320px; max-width: 85%; transition: all 0.3s ease-in-out;
         }
         
-        /* State when expanded */
         #feedback-container.expanded { border-radius: 15px; padding: 15px; }
 
         #feedback-form { display: flex; flex-direction: column; gap: 8px; }
         
-        /* Hide extra fields by default */
         .extra-fields { display: none; flex-direction: column; gap: 8px; margin-top: 5px; }
         #feedback-container.expanded .extra-fields { display: flex; }
 
@@ -79,10 +77,10 @@
         <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
 
         <div class="extra-fields" id="extra-fields">
-            <input type="text" name="entry.NAME_ID" id="name-input" placeholder="Your Name">
-            <input type="email" name="entry.EMAIL_ID" id="email-input" placeholder="Email (for a response)">
-            <input type="tel" name="entry.PHONE_ID" id="phone-input" placeholder="Phone (Optional)">
-            <div class="response-note">Note: Providing contact info helps us respond to your inquiry.</div>
+            <input type="text" name="entry.NAME_ID" id="name-input" placeholder="Your Name (Optional)">
+            <input type="email" name="entry.EMAIL_ID" id="email-input" placeholder="Email (Required for a response)">
+            <input type="tel" name="entry.PHONE_ID" id="phone-input" placeholder="Phone Number (Optional)">
+            <div class="response-note">Providing contact info helps us respond to your inquiry.</div>
             <button type="submit" id="feedback-submit">Send Inquiry</button>
         </div>
     </form>
@@ -111,7 +109,6 @@ function cleanName(name) {
     return name.replace(/School District/gi, "").replace(/Public Schools/gi, "").replace(/Community Unit/gi, "").trim();
 }
 
-// [JobLinks and GeoJSON Logic...]
 var jobLinks = {
     "Carson City School District": "https://jobs.redroverk12.com/org/carsoncityschools",
     "Churchill County School District": "https://www.applitrack.com/churchill/onlineapp/default.aspx?all=1",
@@ -180,16 +177,17 @@ fetch("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School
 const container = document.getElementById('feedback-container');
 const mainInput = document.getElementById('main-input');
 const nameInput = document.getElementById('name-input');
+const emailInput = document.getElementById('email-input');
 
 // Expand when clicking the input
 mainInput.addEventListener('focus', () => {
     container.classList.add('expanded');
 });
 
-// Collapse when clicking the map
+// Smart-Collapse logic
 map.on('mousedown', function() {
-    // Only collapse if they haven't started filling out the form
-    if (mainInput.value === "" && nameInput.value === "") {
+    // Only collapse if they haven't started filling out the form at all
+    if (mainInput.value === "" && nameInput.value === "" && emailInput.value === "") {
         container.classList.remove('expanded');
         mainInput.blur();
     }
