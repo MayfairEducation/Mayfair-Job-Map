@@ -62,7 +62,6 @@
       color: #2c3e50;
       pointer-events: none;
       font-size: 12px;
-      text-transform: uppercase;
       white-space: nowrap;
       padding: 4px 6px;
       border-radius: 4px;
@@ -180,12 +179,7 @@
 
   <div id="map"></div>
 
-  <iframe
-    name="hidden_iframe"
-    id="hidden_iframe"
-    style="display:none;"
-    onload="if(submitted) { showSuccess(); }">
-  </iframe>
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) { showSuccess(); }"></iframe>
 
   <div id="feedback-container">
     <form
@@ -195,12 +189,7 @@
       id="feedback-form"
       onsubmit="submitted = true;">
 
-      <input
-        type="text"
-        name="entry.1624001477"
-        id="main-input"
-        placeholder="Questions, feedback, or broken links?"
-        required>
+      <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
 
       <div class="extra-fields" id="extra-fields">
         <input type="text" name="entry.973226408" id="name-input" placeholder="Your Name (Optional)">
@@ -340,15 +329,6 @@
       map.fitBounds(e.geocode.bbox);
     }).addTo(map);
 
-    function cleanName(name) {
-      return name
-        .replace(/School District/gi, "")
-        .replace(/District Schools/gi, "")
-        .replace(/Public Schools/gi, "")
-        .replace(/County/gi, "")
-        .trim();
-    }
-
     function normalize(str) {
       if (!str) return "";
 
@@ -364,11 +344,48 @@
       return settings.aliases[normalized] || normalized;
     }
 
+    function toTitleCase(str) {
+      return str.toLowerCase().replace(/\b[a-z]/g, function(char) {
+        return char.toUpperCase();
+      });
+    }
+
+    function formatDistrictName(name) {
+      if (!name) return "";
+
+      var cleaned = name.replace(/\s+/g, " ").trim();
+      var normalized = normalize(cleaned);
+
+      var knownNames = {
+        miamidade: "Miami-Dade County Public Schools",
+        stjohns: "St. Johns County School District",
+        stlucie: "St. Lucie Public Schools",
+        desoto: "DeSoto County School District"
+      };
+
+      if (knownNames[normalized]) {
+        return knownNames[normalized];
+      }
+
+      if (/county/i.test(cleaned) && /public schools|school district|district schools/i.test(cleaned)) {
+        return toTitleCase(cleaned);
+      }
+
+      cleaned = cleaned
+        .replace(/school district/gi, "")
+        .replace(/district schools/gi, "")
+        .replace(/public schools/gi, "")
+        .replace(/county/gi, "")
+        .trim();
+
+      return toTitleCase(cleaned) + " County Public Schools";
+    }
+
     var lookup = {};
 
     for (var fullName in settings.jobLinks) {
       lookup[normalize(fullName)] = {
-        displayName: cleanName(fullName),
+        displayName: formatDistrictName(fullName),
         link: settings.jobLinks[fullName]
       };
     }
@@ -399,7 +416,7 @@
           onEachFeature: function(feature, layer) {
             var rawName = feature.properties.NAME;
             var match = lookup[normalize(rawName)];
-            var display = match ? match.displayName : cleanName(rawName);
+            var display = match ? match.displayName : formatDistrictName(rawName);
             var link = match ? match.link : null;
 
             if (!isMobile) {
