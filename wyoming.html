@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wyoming School Districts Job Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-41JX7WMDFE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-41JX7WMDFE");
+  </script>
+
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background-color: #f8f9fa; }
+    h1 { text-align: center; margin: 15px 0; font-size: 1.5rem; color: #333; }
+
+    #map {
+      height: 75vh;
+      width: 98%;
+      margin: auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      z-index: 1;
+    }
+
+    .nav-btn {
+      display: inline-block;
+      margin-left: 1%;
+      margin-bottom: 10px;
+      padding: 12px 20px;
+      background: #ffffff;
+      border: 2px solid #4285F4;
+      color: #4285F4;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .district-label {
+      background: white !important;
+      border: 1px solid #ccc !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+      font-weight: bold;
+      color: #2c3e50;
+      pointer-events: none;
+      font-size: 12px;
+      white-space: nowrap;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+
+    .mobile-district-label {
+      display: none !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-size: 10px;
+      line-height: 1.1;
+      text-align: center;
+      text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+      padding: 0;
+      white-space: nowrap;
+    }
+
+    .mobile-district-label.show-mobile-label {
+      display: block !important;
+    }
+
+    #feedback-container {
+      position: fixed;
+      bottom: 25px;
+      right: 20px;
+      z-index: 2000;
+      background: white;
+      padding: 10px 15px;
+      border-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      border: 2px solid #4285F4;
+      width: 320px;
+      max-width: 85%;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #feedback-container.expanded { border-radius: 15px; padding: 15px; }
+    #feedback-form { display: flex; flex-direction: column; gap: 8px; }
+    .extra-fields { display: none; flex-direction: column; gap: 8px; margin-top: 5px; }
+    #feedback-container.expanded .extra-fields { display: flex; }
+
+    input {
+      border: 1px solid transparent;
+      outline: none;
+      font-size: 15px;
+      background: transparent;
+      width: 100%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+
+    #feedback-container.expanded input {
+      border: 1px solid #eee;
+      background: #fafafa;
+      border-radius: 5px;
+      padding: 8px;
+    }
+
+    .response-note { font-size: 10px; color: #666; font-style: italic; display: none; }
+    #feedback-container.expanded .response-note { display: block; }
+
+    #feedback-submit {
+      background: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+      margin-top: 5px;
+    }
+
+    #feedback-container.expanded #feedback-submit { display: block; }
+
+    @media (max-width: 768px) {
+      #map { height: 60vh; width: 100%; border-radius: 0; }
+
+      .nav-btn {
+        display: block;
+        width: 90%;
+        margin: 0 auto 15px auto;
+        text-align: center;
+        box-sizing: border-box;
+      }
+
+      #feedback-container {
+        left: 5%;
+        right: 5%;
+        bottom: 15px;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="page-title">Wyoming School Districts</h1>
+  <a href="index.html" class="nav-btn">Back to US Map</a>
+
+  <div id="map"></div>
+
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) { showSuccess(); }"></iframe>
+
+  <div id="feedback-container">
+    <form
+      action="https://docs.google.com/forms/d/e/1FAIpQLScjGQuhMgizvq6kSoN1L6By8JB46nvjlf0xearNlpYEnhJYgw/formResponse"
+      method="POST"
+      target="hidden_iframe"
+      id="feedback-form"
+      onsubmit="submitted = true;">
+
+      <input type="text" name="entry.1624001477" id="main-input" placeholder="Questions, feedback, or broken links?" required>
+
+      <div class="extra-fields" id="extra-fields">
+        <input type="text" name="entry.973226408" id="name-input" placeholder="Your Name (Optional)">
+        <input type="email" name="entry.1613736585" id="email-input" placeholder="Email (Required for a response)">
+        <input type="tel" name="entry.546569702" id="phone-input" placeholder="Phone Number (Optional)">
+        <input type="hidden" name="entry.607554921" id="feedback-context" value="Wyoming Map Inquiry">
+
+        <div class="response-note">Providing contact info helps us respond to your inquiry.</div>
+        <button type="submit" id="feedback-submit">Send Inquiry</button>
+      </div>
+    </form>
+
+    <div id="feedback-thanks" style="display:none; color:#4285F4; font-weight:bold; text-align:center; padding:5px;">
+      Thank you! We'll be in touch.
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <script>
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    var submitted = false;
+
+    var defaultStateSettings = {
+      desktopZoom: 6,
+      mobileZoom: 5,
+      labelZoom: 8,
+      districtWeight: 1,
+      fillOpacity: 0.6,
+      hoverFillOpacity: 0.9,
+      matchedFillColor: "#2ecc71",
+      unmatchedFillColor: "#e6e6e6",
+      hoverFillColor: "#66ccff",
+      borderColor: "#555"
+    };
+
+    var stateConfig = {
+      name: "Wyoming",
+      stateFp: "56",
+      center: [43.0, -107.5],
+      feedbackContext: "Wyoming Map Inquiry",
+      aliases: {},
+
+      jobLinks: {
+        "Albany County School District #1": "https://acsd1.schoolspring.com/",
+        "Big Horn County School District #1": "https://www.applitrack.com/bighorn1/onlineapp/default.aspx?all=1",
+        "Big Horn County School District #2": "https://www.applitrack.com/bgh2/onlineapp/default.aspx?all=1",
+        "Big Horn County School District #3": "https://www.applitrack.com/bighorn/onlineapp/default.aspx?all=1",
+        "Big Horn County School District #4": "https://www.applitrack.com/bgh4/onlineapp/default.aspx?all=1",
+        "Campbell County School District #1": "https://campbell.schoolspring.com/",
+        "Carbon County School District #1": "https://www.applitrack.com/crb1/onlineapp/default.aspx?all=1",
+        "Carbon County School District #2": "https://www.applitrack.com/crb2/onlineapp/default.aspx?all=1",
+        "Converse County School District #1": "https://www.applitrack.com/ccsd1/onlineapp/default.aspx?all=1",
+        "Converse County School District #2": "https://www.applitrack.com/converse2/onlineapp/default.aspx?all=1",
+        "Crook County School District #1": "https://crook1.schoolspring.com/",
+        "Fremont County School District #1": "https://www.applitrack.com/fremontwy/onlineapp/default.aspx?all=1",
+        "Fremont County School District #2": "https://fremont2.tedk12.com/hire/index.aspx",
+        "Fremont County School District #6": "https://www.applitrack.com/fre6/onlineapp/default.aspx?all=1",
+        "Fremont County School District #14": "https://www.applitrack.com/fremont14/onlineapp/default.aspx?all=1",
+        "Fremont County School District #21": "https://www.applitrack.com/fortwashakieschool/onlineapp/default.aspx?all=1",
+        "Fremont County School District #24": "https://www.applitrack.com/fremont24/onlineapp/default.aspx?all=1",
+        "Fremont County School District #25": "https://fremont25.schoolspring.com/",
+        "Fremont County School District #38": "https://jobs.redroverk12.com/org/FCSD38",
+        "Goshen County School District #1": "https://goshen.tedk12.com/hire/index.aspx",
+        "Hot Springs County School District #1": "https://jobs.redroverk12.com/org/hotsprings1",
+        "Johnson County School District #1": "https://jobs.redroverk12.com/org/jcsd1",
+        "Laramie County School District #1": "https://laramie1.schoolspring.com/",
+        "Laramie County School District #2": "https://laramie2.schoolspring.com/",
+        "Lincoln County School District #2": "https://lincolnwy.schoolspring.com/",
+        "Natrona County School District #1": "https://natronaschools.schoolspring.com/",
+        "Niobrara County School District #1": "https://www.growingluskleaders.org/page/human-resources",
+        "Park County School District #1": "https://www.applitrack.com/park1/onlineapp/default.aspx?all=1",
+        "Park County School District #6": "https://www.applitrack.com/park6/onlineapp/default.aspx?AppliTrackPostingSearch=location:%22Cody+High+School%22",
+        "Platte County School District #1": "https://www.platte1.org/89574_1",
+        "Platte County School District #2": "https://jobs.redroverk12.com/org/PCSD2",
+        "Sheridan County School District #1": "https://www.applitrack.com/sheridanwy/onlineapp/default.aspx?all=1",
+        "Sheridan County School District #2": "https://www.applitrack.com/scsd2/OnlineApp/default.aspx?all=1",
+        "Sheridan County School District #3": "https://www.sheridan3.com/page/hr-and-career-opportunities",
+        "Sublette County School District #1": "https://skyward.iscorp.com/scripts/wsisa.dll/WService=wsfinsublettecowy/rapplmnu03.w",
+        "Sublette County School District #9": "https://jobs.redroverk12.com/org/SCSD9",
+        "Sweetwater County School District #1": "https://www.applitrack.com/sweetwater/onlineapp/default.aspx?all=1",
+        "Sweetwater County School District #2": "https://www.applitrack.com/swcsd2/onlineapp/default.aspx?all=1",
+        "Teton County School District #1": "https://www.applitrack.com/tcsd/onlineapp/default.aspx?all=1",
+        "Uinta County School District #1": "https://www.applitrack.com/uinta/onlineapp/default.aspx?all=1",
+        "Uinta County School District #4": "https://www.uinta4.com/departments/business_office/job_opportunities/current_openings",
+        "Uinta County School District #6": "https://sites.google.com/lymanschools.org/ucsd6/home/job-openings",
+        "Washakie County School District #1": "https://www.applitrack.com/washakie1/onlineapp/default.aspx?all=1",
+        "Washakie County School District #2": "https://www.wsh2.k12.wy.us/apps/pages/index.jsp?uREC_ID=440610&type=d&pREC_ID=1008214",
+        "Weston County School District #1": "https://www.wcsd1.org/apps/pages/Career_Opportunities",
+        "Weston County School District #7": "https://www.wsba-wy.org/"
+      }
+    };
+
+    var settings = Object.assign({}, defaultStateSettings, stateConfig);
+
+    document.getElementById("page-title").textContent = settings.name + " School Districts";
+    document.getElementById("feedback-context").value = settings.feedbackContext;
+
+    var map = L.map("map").setView(
+      settings.center,
+      isMobile ? settings.mobileZoom : settings.desktopZoom
+    );
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    L.Control.geocoder({
+      defaultMarkGeocode: false,
+      placeholder: "Search...",
+      collapsed: isMobile
+    }).on("markgeocode", function(e) {
+      map.fitBounds(e.geocode.bbox);
+    }).addTo(map);
+
+    function normalize(str) {
+      if (!str) return "";
+
+      var normalized = str
+        .toLowerCase()
+        .replace(/school district/g, "")
+        .replace(/county/g, "")
+        .replace(/district/g, "")
+        .replace(/no\./g, "")
+        .replace(/number/g, "")
+        .replace(/#/g, "")
+        .replace(/[^a-z0-9]/g, "")
+        .trim();
+
+      return settings.aliases[normalized] || normalized;
+    }
+
+    function toTitleCase(str) {
+      return str.toLowerCase().replace(/\b[a-z]/g, function(char) {
+        return char.toUpperCase();
+      });
+    }
+
+    function formatDistrictName(name) {
+      if (!name) return "";
+
+      var cleaned = name
+        .replace(/\s+/g, " ")
+        .replace(/School District No\.?\s*/i, "School District #")
+        .replace(/School District Number\s*/i, "School District #")
+        .trim();
+
+      var numberMatch = cleaned.match(/(?:#|No\.?\s*|Number\s*)(\d+)/i);
+      var districtNumber = numberMatch ? numberMatch[1] : "";
+
+      cleaned = cleaned
+        .replace(/#/g, "#")
+        .replace(/\s+#/g, " #")
+        .trim();
+
+      if (/county school district/i.test(cleaned) && districtNumber) {
+        var countyName = cleaned
+          .replace(/County School District.*$/i, "")
+          .trim();
+
+        return toTitleCase(countyName) + " County School District #" + districtNumber;
+      }
+
+      return toTitleCase(cleaned);
+    }
+
+    function formatMobileDistrictName(name) {
+      var fullName = formatDistrictName(name);
+      var numberMatch = fullName.match(/#\s*(\d+)/);
+      var districtNumber = numberMatch ? numberMatch[1] : "";
+
+      var countyName = fullName
+        .replace(/County School District.*$/i, "")
+        .replace(/County$/i, "")
+        .trim();
+
+      if (districtNumber) {
+        return countyName + " #" + districtNumber;
+      }
+
+      return countyName;
+    }
+
+    var lookup = {};
+
+    for (var fullName in settings.jobLinks) {
+      lookup[normalize(fullName)] = {
+        displayName: formatDistrictName(fullName),
+        mobileDisplayName: formatMobileDistrictName(fullName),
+        link: settings.jobLinks[fullName]
+      };
+    }
+
+    var boundaryUrl =
+      "https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/School_Districts_Current/FeatureServer/0/query" +
+      "?where=STATEFP='" + settings.stateFp + "'" +
+      "&outFields=NAME" +
+      "&f=geojson";
+
+    fetch(boundaryUrl)
+      .then(function(res) {
+        return res.json();
+      })
+      .then(function(data) {
+        var geojsonLayer = L.geoJson(data, {
+          style: function(feature) {
+            var hasMatch = lookup.hasOwnProperty(normalize(feature.properties.NAME));
+
+            return {
+              fillColor: hasMatch ? settings.matchedFillColor : settings.unmatchedFillColor,
+              color: settings.borderColor,
+              weight: settings.districtWeight,
+              fillOpacity: settings.fillOpacity
+            };
+          },
+
+          onEachFeature: function(feature, layer) {
+            var rawName = feature.properties.NAME;
+            var match = lookup[normalize(rawName)];
+            var display = match ? match.displayName : formatDistrictName(rawName);
+            var mobileDisplay = match ? match.mobileDisplayName : formatMobileDistrictName(rawName);
+            var link = match ? match.link : null;
+
+            layer.bindTooltip(isMobile ? mobileDisplay : display, {
+              permanent: isMobile,
+              sticky: !isMobile,
+              direction: isMobile ? "center" : "top",
+              className: isMobile ? "district-label mobile-district-label" : "district-label",
+              offset: [0, 0]
+            });
+
+            layer.on({
+              mouseover: function(e) {
+                if (!isMobile) {
+                  e.target.setStyle({
+                    fillOpacity: settings.hoverFillOpacity,
+                    fillColor: settings.hoverFillColor
+                  });
+                }
+              },
+
+              mouseout: function(e) {
+                if (!isMobile) {
+                  geojsonLayer.resetStyle(e.target);
+                }
+              },
+
+              click: function() {
+                if (link) {
+                  gtag("event", "click_district", {
+                    district_name: display,
+                    state: settings.name
+                  });
+
+                  window.open(link, "_blank");
+                }
+              }
+            });
+          }
+        }).addTo(map);
+
+        function updateMobileLabelVisibility() {
+          if (!isMobile) return;
+
+          var zoom = map.getZoom();
+          var labels = document.querySelectorAll(".mobile-district-label");
+
+          labels.forEach(function(label) {
+            if (zoom >= settings.labelZoom) {
+              label.classList.add("show-mobile-label");
+            } else {
+              label.classList.remove("show-mobile-label");
+            }
+          });
+        }
+
+        map.on("zoomend", updateMobileLabelVisibility);
+        updateMobileLabelVisibility();
+      });
+
+    var container = document.getElementById("feedback-container");
+    var mainInput = document.getElementById("main-input");
+    var nameInput = document.getElementById("name-input");
+    var emailInput = document.getElementById("email-input");
+
+    mainInput.addEventListener("focus", function() {
+      container.classList.add("expanded");
+    });
+
+    map.on("mousedown", function() {
+      if (mainInput.value === "" && nameInput.value === "" && emailInput.value === "") {
+        container.classList.remove("expanded");
+        mainInput.blur();
+      }
+    });
+
+    function showSuccess() {
+      if (submitted) {
+        document.getElementById("feedback-form").style.display = "none";
+        document.getElementById("feedback-thanks").style.display = "block";
+
+        setTimeout(function() {
+          location.reload();
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>
