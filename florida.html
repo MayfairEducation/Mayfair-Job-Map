@@ -67,6 +67,20 @@
       border-radius: 4px;
     }
 
+    .mobile-district-label {
+      display: none !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-size: 10px;
+      text-shadow: 1px 1px 2px white;
+      padding: 0;
+    }
+
+    .mobile-district-label.show-mobile-label {
+      display: block !important;
+    }
+
     #feedback-container {
       position: fixed;
       bottom: 25px;
@@ -217,6 +231,7 @@
     var defaultStateSettings = {
       desktopZoom: 7,
       mobileZoom: 6,
+      labelZoom: 8,
       districtWeight: 1,
       fillOpacity: 0.6,
       hoverFillOpacity: 0.9,
@@ -419,14 +434,13 @@
             var display = match ? match.displayName : formatDistrictName(rawName);
             var link = match ? match.link : null;
 
-            if (!isMobile) {
-              layer.bindTooltip(display, {
-                permanent: false,
-                sticky: true,
-                direction: "top",
-                className: "district-label"
-              });
-            }
+            layer.bindTooltip(display, {
+              permanent: isMobile,
+              sticky: !isMobile,
+              direction: isMobile ? "center" : "top",
+              className: isMobile ? "district-label mobile-district-label" : "district-label",
+              offset: [0, 0]
+            });
 
             layer.on({
               mouseover: function(e) {
@@ -457,6 +471,24 @@
             });
           }
         }).addTo(map);
+
+        function updateMobileLabelVisibility() {
+          if (!isMobile) return;
+
+          var zoom = map.getZoom();
+          var labels = document.querySelectorAll(".mobile-district-label");
+
+          labels.forEach(function(label) {
+            if (zoom >= settings.labelZoom) {
+              label.classList.add("show-mobile-label");
+            } else {
+              label.classList.remove("show-mobile-label");
+            }
+          });
+        }
+
+        map.on("zoomend", updateMobileLabelVisibility);
+        updateMobileLabelVisibility();
       });
 
     var container = document.getElementById("feedback-container");
