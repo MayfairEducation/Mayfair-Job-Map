@@ -67,18 +67,27 @@
       border-radius: 4px;
     }
 
-    .mobile-district-label {
-      display: none !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      font-size: 10px;
-      text-shadow: 1px 1px 2px white;
-      padding: 0;
+    .mobile-label-icon {
+      display: none;
+      pointer-events: none;
+      text-align: center;
     }
 
-    .mobile-district-label.show-mobile-label {
-      display: block !important;
+    .mobile-label-icon.show-mobile-label {
+      display: block;
+    }
+
+    .mobile-label-text {
+      display: inline-block;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      color: #2c3e50;
+      font-size: 10px;
+      line-height: 1.1;
+      text-align: center;
+      white-space: nowrap;
+      text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+      pointer-events: none;
     }
 
     #feedback-container {
@@ -344,6 +353,8 @@
       map.fitBounds(e.geocode.bbox);
     }).addTo(map);
 
+    var mobileLabelLayer = L.layerGroup().addTo(map);
+
     function normalize(str) {
       if (!str) return "";
 
@@ -396,11 +407,41 @@
       return toTitleCase(cleaned) + " County Public Schools";
     }
 
+    function formatMobileDistrictName(name) {
+      var fullName = formatDistrictName(name);
+
+      return fullName
+        .replace(/County Public Schools/gi, "County")
+        .replace(/County School District/gi, "County")
+        .replace(/Public Schools/gi, "")
+        .replace(/School District/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getLabelCenter(layer) {
+      if (typeof layer.getCenter === "function") {
+        return layer.getCenter();
+      }
+
+      return layer.getBounds().getCenter();
+    }
+
     var lookup = {};
 
     for (var fullName in settings.jobLinks) {
       lookup[normalize(fullName)] = {
         displayName: formatDistrictName(fullName),
+        mobileDisplayName: formatMobileDistrictName(fullName),
         link: settings.jobLinks[fullName]
       };
     }
@@ -432,15 +473,32 @@
             var rawName = feature.properties.NAME;
             var match = lookup[normalize(rawName)];
             var display = match ? match.displayName : formatDistrictName(rawName);
+            var mobileDisplay = match ? match.mobileDisplayName : formatMobileDistrictName(rawName);
             var link = match ? match.link : null;
 
-            layer.bindTooltip(display, {
-              permanent: isMobile,
-              sticky: !isMobile,
-              direction: isMobile ? "center" : "top",
-              className: isMobile ? "district-label mobile-district-label" : "district-label",
-              offset: [0, 0]
-            });
+            if (!isMobile) {
+              layer.bindTooltip(display, {
+                permanent: false,
+                sticky: true,
+                direction: "top",
+                className: "district-label"
+              });
+            }
+
+            if (isMobile) {
+              var labelMarker = L.marker(getLabelCenter(layer), {
+                interactive: false,
+                keyboard: false,
+                icon: L.divIcon({
+                  className: "mobile-label-icon",
+                  html: '<span class="mobile-label-text">' + escapeHtml(mobileDisplay) + '</span>',
+                  iconSize: [0, 0],
+                  iconAnchor: [0, 0]
+                })
+              });
+
+              mobileLabelLayer.addLayer(labelMarker);
+            }
 
             layer.on({
               mouseover: function(e) {
@@ -476,7 +534,7 @@
           if (!isMobile) return;
 
           var zoom = map.getZoom();
-          var labels = document.querySelectorAll(".mobile-district-label");
+          var labels = document.querySelectorAll(".mobile-label-icon");
 
           labels.forEach(function(label) {
             if (zoom >= settings.labelZoom) {
